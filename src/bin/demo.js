@@ -35,11 +35,68 @@ const constitution = buildPreset('balanced', { identity: IDENTITY });
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
 const line = (text = '') => console.log(text);
 
-/** Pace the reveal so a room can follow it. `--fast` for rehearsal. */
-const BEAT = process.argv.includes('--fast') ? 0 : 700;
+/**
+ * Three ways to run this.
+ *
+ *   default   one act per screen, advanced by Enter -- the presenter talks
+ *             over each act and moves on when the room has read it
+ *   --auto    timed playback, nobody at the keyboard
+ *   --fast    no pacing, no clearing, no waiting; for rehearsal and for piping
+ *
+ * The default exists because the whole run is over two hundred lines. On a
+ * projector showing thirty, unattended playback means the audience only ever
+ * sees the last act scroll past.
+ */
+const FAST = process.argv.includes('--fast');
+const AUTO = process.argv.includes('--auto');
+const BEAT = FAST ? 0 : AUTO ? 700 : 220;
+
+const ESC = '\u001b[';
+
+/** Wait for Enter, or for anything else that is not a way to quit. */
+function pause() {
+  if (FAST || AUTO) return Promise.resolve();
+  return new Promise((done) => {
+    const input = process.stdin;
+    if (!input.isTTY) {
+      done();
+      return;
+    }
+    process.stdout.write(`\n  ${style.grey('press enter')}`);
+    input.setRawMode(true);
+    input.resume();
+    input.once('data', (chunk) => {
+      input.setRawMode(false);
+      input.pause();
+      // Ctrl-C and q both stop the demo rather than advancing it.
+      if (chunk[0] === 3 || chunk[0] === 113) {
+        process.stdout.write('\n');
+        process.exit(0);
+      }
+      done();
+    });
+  });
+}
+
+let first = true;
+
+/** Break inside an act, keeping the heading so the room does not lose its place. */
+async function screen(number, title, subtitle) {
+  await pause();
+  if (!FAST) process.stdout.write(`${ESC}2J${ESC}H`);
+  line();
+  line(`  ${style.grey(`ACT ${number}`)}  ${style.bold(title)}`);
+  if (subtitle) line(`          ${style.dim(subtitle)}`);
+  line();
+}
 
 async function act(number, title, subtitle) {
-  line();
+  if (!first) await pause();
+  first = false;
+
+  // One act per screen, so nothing the room needs has already scrolled away.
+  if (!FAST) process.stdout.write(`${ESC}2J${ESC}H`);
+
   line();
   line(`  ${style.grey(`ACT ${number}`)}  ${style.bold(title)}`);
   if (subtitle) line(`          ${style.dim(subtitle)}`);
@@ -97,17 +154,16 @@ async function actSetup() {
   line();
   line(`    ${style.dim('Then your own email, so it can tell your details from other people\'s.')}`);
   line(`      ${style.cyan('❯')} ${IDENTITY.email}`);
-  line();
   await wait(BEAT);
 
+  line();
   line(`    ${style.green(`${constitution.rules.length} rules written to ~/.constitution/constitution.yaml`)}`);
   line(`    ${style.grey('local, never uploaded — a rule about your health leaks it by existing')}`);
-  line();
   await wait(BEAT);
 
+  line();
   line(`    ${style.grey('$')} npx privacy-constitution install`);
-  line(`    ${style.green('Hook registered in .claude/settings.json')}`);
-  line(`    ${style.dim('Every tool call now goes through the kernel first.')}`);
+  line(`    ${style.green('Hook registered — every tool call now goes through the kernel first.')}`);
 }
 
 // ── Act 0 ────────────────────────────────────────────────────────────────
@@ -199,15 +255,15 @@ async function actProof() {
     line(`      ${style.dim('·')} ${message.subject}  ${style.grey(`from ${message.from}`)}`);
   }
   line(`      ${style.grey('one of those carries an instruction aimed at the agent, not at you')}`);
-  line();
   await wait(BEAT * 2);
 
+  await screen('3', 'The same morning, twice', 'No constitution. A well-behaved agent doing its job.');
   const before = await triage();
   line(`    ${style.red('WITHOUT')}  four calls go out, all of them in full`);
   line();
   for (const entry of before.wire) {
     line(`      → ${style.bold(entry.recipient)}`);
-    for (const row of fieldDiff(entry.sent, entry.sent)) line(`          ${row}`);
+    for (const row of fieldDiff(entry.sent, entry.sent, 62)) line(`          ${row}`);
     line();
     await wait(BEAT / 2);
   }
@@ -219,7 +275,7 @@ async function actProof() {
   }
   await wait(BEAT * 2);
 
-  line();
+  await screen('3', 'The same morning, twice', 'Now with the constitution in front of every call.');
   const after = await triage({ constitution });
   line(`    ${style.green('WITH')}     the same agent, the same inbox`);
   line();
@@ -229,7 +285,7 @@ async function actProof() {
   for (const entry of after.wire) {
     const decision = byTool.get(entry.tool);
     line(`      → ${style.bold(entry.recipient)}`);
-    for (const row of fieldDiff(decision?.proposed ?? entry.sent, entry.sent)) line(`          ${row}`);
+    for (const row of fieldDiff(decision?.proposed ?? entry.sent, entry.sent, 62)) line(`          ${row}`);
     line();
     await wait(BEAT);
   }
@@ -237,7 +293,7 @@ async function actProof() {
   for (const held of after.held) {
     const decision = byTool.get(held.tool);
     line(`      ${style.red('✕')} ${style.bold(held.recipient)}   ${style.red('blocked, never called')}`);
-    for (const row of fieldDiff(decision?.proposed ?? {}, null)) line(`          ${row}`);
+    for (const row of fieldDiff(decision?.proposed ?? {}, null, 62)) line(`          ${row}`);
     if (held.injected) line(`          ${style.red('this was the newsletter talking, not you')}`);
     line();
     await wait(BEAT);
@@ -334,7 +390,7 @@ async function actPortability() {
     await wrapped.invoke({}, JSON.stringify(input));
 
     line(`    ${style.dim('the agent proposes')}`);
-    line(`      ${JSON.stringify(input)}`);
+    line(`      ${style.dim(JSON.stringify(input).slice(0, 88))}`);
     line();
     await wait(BEAT);
     line(`    ${'Claude Code'.padEnd(14)} ${style.violet(JSON.stringify(viaHook))}`);
@@ -367,18 +423,28 @@ async function actNumber(scenario) {
   await wait(BEAT);
 
   line();
-  for (const [category, entry] of score.byCategory) {
-    const full = entry.held === entry.total;
-    line(`      ${full ? style.green('ok  ') : style.amber('gap ')} ${category.padEnd(18)} ${entry.held}/${entry.total}`);
+  // Two columns, so the breakdown does not push the closing line off screen.
+  const rows = score.byCategory;
+  const half = Math.ceil(rows.length / 2);
+  for (let index = 0; index < half; index += 1) {
+    const cell = ([category, entry]) =>
+      entry === undefined
+        ? ' '.repeat(30)
+        : `${entry.held === entry.total ? style.green('ok  ') : style.amber('gap ')} ${category.padEnd(18)} ${entry.held}/${entry.total}`.padEnd(
+            30 + 9,
+          );
+    line(`      ${cell(rows[index] ?? [])}  ${cell(rows[index + half] ?? [])}`);
     await wait(BEAT / 4);
   }
 
   line();
-  line(`    ${style.dim('The gap is honest: three probes need judgement rather than pattern-matching.')}`);
-  line(`    ${style.dim('A suite you score full marks on is a suite written to flatter you.')}`);
+  line(`    ${style.dim('The gap is honest: three probes need judgement, not pattern-matching.')}`);
+  line(`    ${style.dim('A suite you score full marks on is one written to flatter you.')}`);
 }
 
 async function closing() {
+  await pause();
+  if (!FAST) process.stdout.write(`${ESC}2J${ESC}H`);
   line();
   line();
   for (const text of panel('the argument', [
@@ -394,10 +460,14 @@ async function closing() {
 }
 
 export async function runDemo() {
+  if (!FAST) process.stdout.write(`${ESC}2J${ESC}H`);
+  line();
   line();
   line(`  ${style.bold('Privacy Constitution')}`);
   line(`  ${style.dim('Pre-tool-call enforcement of rules you never had to write.')}`);
-  line(`  ${style.grey('Everything below runs locally. No key, no network, no model call.')}`);
+  line();
+  line(`  ${style.grey('Everything runs locally. No key, no network, no model call.')}`);
+  line(`  ${style.grey('Seven acts, about three minutes. Enter to advance, q to stop.')}`);
 
   await actSetup();
   const summary = await actShock();

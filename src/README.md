@@ -16,9 +16,18 @@ make on stage.
 
 ```bash
 cd src && npm install
-npx . demo            # the whole thing, seven acts, about three minutes
-npx . demo --fast     # same, no pacing, for rehearsal
+npx . demo            # one act per screen, Enter to advance, q to stop
+npx . demo --auto     # timed playback, nobody at the keyboard
+npx . demo --fast     # no pacing, no clearing; rehearsal and piping
 ```
+
+**Presenting it.** Ten acts' worth of output is over two hundred lines, so the
+default clears the screen between acts and waits for you. Every screen fits in
+34 rows and 99 columns — set the terminal to at least **100x38** and the demo
+never scrolls, which means nothing the room needs has already gone past.
+
+`--auto` is for a screen nobody is standing at. `--fast` is for rehearsal, and
+for piping the output somewhere.
 
 Setup, the history scan, where rules come from, the inbox scene run twice, the
 hold menu, portability, and the closing number. It is entirely local — no key,

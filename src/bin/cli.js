@@ -538,7 +538,7 @@ switch (command) {
     console.log(`
   ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
 
-    demo      the whole thing, five acts            ${dim('--fast to skip the pacing')}
+    demo      the whole thing, seven acts           ${dim('--auto unattended, --fast for rehearsal')}
     init      set up your constitution              ${dim('--force to start over')}
     rules     what your constitution says, in plain English
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}
