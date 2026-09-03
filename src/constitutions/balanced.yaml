@@ -77,7 +77,7 @@ rules:
     provenance: { source: preset, from: balanced }
 
   - id: health-to-healthcare-is-fine
-    says: "Health details may go to a healthcare provider — that is the point of the appointment."
+    says: "Health details may go to a healthcare provider, which is the point of the appointment."
     data: [health]
     recipient: { sector: [healthcare] }
     outcome: allow

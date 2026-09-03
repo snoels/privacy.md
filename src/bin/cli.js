@@ -24,6 +24,9 @@ import {
 import { readLedger, summarize } from '../kernel/ledger.js';
 import { menuFor, pruneExpired } from '../kernel/rules.js';
 import { clearHold, listHolds, loadHold } from '../kernel/pending.js';
+import { escalate } from '../kernel/freetext.js';
+import { onboard, rehearse } from './onboard.js';
+import { panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
@@ -81,6 +84,7 @@ function install({ scope = 'project', dir = process.cwd() } = {}) {
   return { settingsPath, already };
 }
 
+/** Non-interactive fallback: used by `install`, and where there is no terminal. */
 function initConstitution({ preset = 'balanced', force = false } = {}) {
   if (existsSync(CONSTITUTION_PATH) && !force) {
     return { path: CONSTITUTION_PATH, existed: true };
@@ -89,6 +93,70 @@ function initConstitution({ preset = 'balanced', force = false } = {}) {
   mkdirSync(CONSTITUTION_HOME, { recursive: true });
   saveConstitution({ ...base, identity: base.identity ?? {} });
   return { path: CONSTITUTION_PATH, existed: false };
+}
+
+/** The onboarding flow: preset, the contested questions, the review table. */
+async function runOnboarding({ force = false } = {}) {
+  const existing = existsSync(CONSTITUTION_PATH);
+  if (existing && !force) {
+    console.log(dim(`You already have a constitution at ${CONSTITUTION_PATH}.`));
+    console.log(dim('Run with --force to start over, or `rules` to see what it says.'));
+    return;
+  }
+
+  const { constitution, freeText, budget } = await onboard({ existing });
+
+  console.log();
+  if (freeText.length > 0) {
+    console.log(`  ${style.bold('What you typed, as rules')}`);
+    for (const entry of freeText) console.log(`    ${style.green('+')} ${entry.rule.says}`);
+  }
+
+  // Anything we could not place is said out loud. A user who typed a rule and
+  // heard nothing back will assume it is in force.
+  const missed = freeText.length >= 0 ? escalate(freeText.map((e) => e.from).join('. ')) : [];
+  if (missed.length > 0) {
+    console.log(`  ${style.amber('Not understood, so not saved:')}`);
+    for (const clause of missed) console.log(`    ${style.dim(clause)}`);
+  }
+
+  console.log();
+  console.log(`  ${style.bold('What that does, on flows you will recognise')}`);
+  console.log();
+  for (const line of rehearse(constitution)) console.log(`    ${line}`);
+
+  saveConstitution(constitution);
+  console.log();
+  console.log(green(`  ${constitution.rules.length} rules written to ${CONSTITUTION_PATH}`));
+  console.log(dim(`  Interruption budget: ${budget} a day. The report measures against it.`));
+  console.log();
+  console.log(dim('  Next: npx privacy-constitution install    (registers the hook in this project)'));
+  console.log();
+}
+
+/** Show the constitution in the plain-English form the user can audit. */
+function showRules() {
+  const constitution = loadConstitution();
+  const bySource = new Map();
+  for (const rule of constitution.rules ?? []) {
+    const source = rule.provenance?.source ?? 'unattributed';
+    bySource.set(source, [...(bySource.get(source) ?? []), rule]);
+  }
+
+  const colour = { allow: style.green, redact: style.violet, substitute: style.cyan, ask: style.amber, block: style.red };
+
+  console.log();
+  for (const [source, rules] of bySource) {
+    console.log(`  ${bold(source.replace(/-/g, ' '))}`);
+    for (const rule of rules) {
+      const paint = colour[rule.outcome] ?? style.dim;
+      console.log(`    ${paint(rule.outcome.padEnd(11))} ${rule.says}`);
+      if (rule.expires) console.log(`    ${' '.repeat(11)} ${dim(`expires ${new Date(rule.expires).toLocaleTimeString()}`)}`);
+    }
+    console.log();
+  }
+  console.log(dim(`  ${CONSTITUTION_PATH}`));
+  console.log();
 }
 
 function report() {
@@ -134,7 +202,7 @@ function report() {
  * it is saved, because a privacy rule the user did not understand is worse than
  * no rule at all.
  */
-function decide(id, choice) {
+async function decide(id, choice) {
   const hold = loadHold(id);
   if (!hold) {
     console.log(dim(`No held call with id ${id}. It may have expired, or already been decided.`));
@@ -145,8 +213,31 @@ function decide(id, choice) {
   }
 
   const options = menuFor(hold);
-  const index = Number.parseInt(choice, 10) - 1;
-  const option = Number.isInteger(index) ? options[index] : options.find((o) => o.key === choice);
+  let option;
+
+  if (choice === undefined && process.stdin.isTTY) {
+    // The user is at their own terminal, so they get the picker rather than a
+    // number to type. Same menu the agent relayed, with the rule each option
+    // writes updating as the cursor moves.
+    option = await select({
+      title: `${hold.tool} wants to reach ${hold.recipient.name}`,
+      hint:
+        hold.recipient.chosenBy === 'agent'
+          ? 'You did not pick this destination, the agent did.'
+          : `Recipient is ${hold.recipient.trust.replace(/_/g, ' ')}.`,
+      options: options.map((entry) => ({ ...entry, hint: entry.consequence })),
+      preview: (entry) => {
+        const written = entry.rule();
+        return panel(
+          'the rule this writes',
+          written ? [written.says] : [style.dim('nothing is remembered, this call only')],
+        );
+      },
+    });
+  } else {
+    const index = Number.parseInt(choice, 10) - 1;
+    option = Number.isInteger(index) ? options[index] : options.find((o) => o.key === choice);
+  }
 
   if (!option) {
     console.log(dim(`Pick one of 1-${options.length}, or a name: ${options.map((o) => o.key).join(', ')}`));
@@ -214,17 +305,17 @@ const value = (name, fallback) => {
 
 switch (command) {
   case 'init': {
-    const { path, existed } = initConstitution({
-      preset: value('preset', 'balanced'),
-      force: flag('force'),
-    });
-    console.log(
-      existed
-        ? dim(`Constitution already at ${path} (use --force to reset)`)
-        : green(`Constitution written to ${path}`),
-    );
+    if (flag('preset') || !process.stdin.isTTY) {
+      const { path, existed } = initConstitution({ preset: value('preset', 'balanced'), force: flag('force') });
+      console.log(existed ? dim(`Constitution already at ${path} (use --force to reset)`) : green(`Constitution written to ${path}`));
+    } else {
+      await runOnboarding({ force: flag('force') });
+    }
     break;
   }
+  case 'rules':
+    showRules();
+    break;
   case 'install': {
     initConstitution({ preset: value('preset', 'balanced') });
     const { settingsPath, already } = install({
@@ -238,7 +329,7 @@ switch (command) {
     break;
   }
   case 'decide':
-    decide(args[0], args[1]);
+    await decide(args[0], args[1]);
     break;
   case 'holds':
     holds();
@@ -253,7 +344,8 @@ switch (command) {
     console.log(`
   ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
 
-    init      write a constitution from a preset   ${dim('--preset balanced --force')}
+    init      set up your constitution              ${dim('--force to start over')}
+    rules     what your constitution says, in plain English
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}
     holds     calls waiting on a decision, with the menu for each
     decide    answer a held call                   ${dim('<hold-id> <number>')}

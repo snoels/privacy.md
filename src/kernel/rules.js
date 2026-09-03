@@ -16,20 +16,50 @@ import { OUTCOMES } from './evaluate.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 
-/** Human wording for a data type, for the plain-English rule line. */
+/**
+ * How to name a data type in a sentence.
+ *
+ * Two positions are needed and one string cannot serve both. After a determiner
+ * the noun has to be bare ("gets no contact details"), and at the head of a
+ * sentence it wants an owner ("Your contact details never reach ..."). Storing
+ * one possessive string for both is how you get "gets no your contact details".
+ *
+ * `mine` also keeps other people's data attributed to them, which is the whole
+ * point of having a separate type for it.
+ */
 const DATA_WORDS = {
-  contact: 'your contact details',
-  third_party_contact: "other people's contact details",
-  credentials: 'keys and secrets',
-  health: 'health details',
-  location: 'your location',
-  financial: 'financial details',
-  identity: 'identity documents',
-  salary_history: 'salary history',
-  special_category: 'special-category details',
+  contact: { noun: 'contact details', mine: true, plural: true },
+  third_party_contact: { noun: "other people's contact details", mine: false, plural: true },
+  credentials: { noun: 'keys and secrets', mine: true, plural: true },
+  health: { noun: 'health details', mine: true, plural: true },
+  location: { noun: 'precise location', mine: true, plural: false },
+  financial: { noun: 'financial details', mine: true, plural: true },
+  identity: { noun: 'identity documents', mine: true, plural: true },
+  salary_history: { noun: 'salary history', mine: true, plural: false },
+  special_category: { noun: 'special-category details', mine: true, plural: true },
 };
 
-const words = (type) => DATA_WORDS[type] ?? type.replace(/_/g, ' ');
+const wordsFor = (type) =>
+  DATA_WORDS[type] ?? { noun: type.replace(/_/g, ' '), mine: false, plural: false };
+
+/** For after a determiner: "gets no contact details". */
+function bareSubject(types) {
+  if (types.length === 0) return 'this data';
+  return types.map((type) => wordsFor(type).noun).join(' and ');
+}
+
+/** For the head of a sentence: "Your salary history and other people's contact details". */
+function ownedSubject(types) {
+  if (types.length === 0) return 'this data';
+  const mine = types.filter((type) => wordsFor(type).mine).map((type) => wordsFor(type).noun);
+  const theirs = types.filter((type) => !wordsFor(type).mine).map((type) => wordsFor(type).noun);
+  const parts = mine.length > 0 ? [`your ${mine.join(' and ')}`] : [];
+  parts.push(...theirs);
+  return parts.join(' and ');
+}
+
+/** Two types are always plural, whatever each one is on its own. */
+const isPlural = (types) => types.length !== 1 || wordsFor(types[0]).plural;
 
 /** A short label for the kind of task, so "this kind of task" means something. */
 export function taskKind(recipient) {
@@ -50,7 +80,8 @@ export function taskKind(recipient) {
 export function menuFor(held, shape = {}) {
   const recipient = held.recipient;
   const types = [...new Set(held.results.filter((r) => r.outcome !== OUTCOMES.ALLOW).map((r) => r.type))];
-  const subject = types.map(words).join(' and ') || 'this data';
+  const bare = bareSubject(types);
+  const owned = ownedSubject(types);
   const canRedact = shape.canRedact !== false;
   const where = recipient.name;
 
@@ -60,7 +91,7 @@ export function menuFor(held, shape = {}) {
     options.push({
       key: 'redact',
       label: 'Redact and send',
-      consequence: `the call still works, ${where} gets no ${subject}`,
+      consequence: `the call still works, ${where} gets no ${bare}`,
       outcome: OUTCOMES.REDACT,
       scope: 'recipient',
       rule: () => rule({ held, types, outcome: OUTCOMES.REDACT, scope: 'recipient' }),
@@ -95,7 +126,7 @@ export function menuFor(held, shape = {}) {
     {
       key: 'recipient',
       label: `Allow for ${where}`,
-      consequence: `any future call to ${where} may carry ${subject}`,
+      consequence: `any future call to ${where} may carry ${bare}`,
       outcome: OUTCOMES.ALLOW,
       scope: 'recipient',
       rule: () => rule({ held, types, outcome: OUTCOMES.ALLOW, scope: 'recipient' }),
@@ -103,7 +134,7 @@ export function menuFor(held, shape = {}) {
     {
       key: 'task',
       label: `Allow for ${taskKind(recipient)}`,
-      consequence: `any ${taskKind(recipient)}, not just ${where}`,
+      consequence: `${taskKind(recipient)}, not just ${where}`,
       outcome: OUTCOMES.ALLOW,
       scope: 'sector',
       rule: () => rule({ held, types, outcome: OUTCOMES.ALLOW, scope: 'sector' }),
@@ -111,7 +142,7 @@ export function menuFor(held, shape = {}) {
     {
       key: 'never',
       label: 'Never',
-      consequence: `${subject} will never reach ${where}; calls that need it will fail`,
+      consequence: `${owned} will never reach ${where}; calls that need it will fail`,
       outcome: OUTCOMES.BLOCK,
       scope: 'recipient',
       rule: () => rule({ held, types, outcome: OUTCOMES.BLOCK, scope: 'recipient' }),
@@ -124,7 +155,7 @@ export function menuFor(held, shape = {}) {
 /** Build the rule an option would write, so it can be previewed before it is saved. */
 export function rule({ held, types, outcome, scope }) {
   const recipient = held.recipient;
-  const subject = types.map(words).join(' and ');
+  const subject = ownedSubject(types);
 
   const spec =
     scope === 'sector'
@@ -135,23 +166,33 @@ export function rule({ held, types, outcome, scope }) {
 
   const target = scope === 'sector' ? taskKind(recipient) : recipient.name;
 
-  // Every data word is plural ("health details", "keys and secrets"), so the
-  // verbs are too. These lines are what the user audits and what goes on a
-  // slide, so they have to read like English rather than like a template.
+  // An hour-long grant and a forever grant produced the same sentence, which
+  // makes the two options indistinguishable at the moment of choosing. The
+  // expiry has to be in the English, not only in the `expires` field.
+  const expiresAt = scope === 'session' ? new Date(Date.now() + HOUR_MS) : null;
+  const until = expiresAt
+    ? ` until ${expiresAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    : '';
+
+  // Most data words are plural ("health details", "keys and secrets") but not
+  // all of them ("salary history", "precise location"), so the verb has to
+  // agree. These lines are what the user audits and what goes on a slide, so
+  // they have to read like English rather than like a template.
+  const plural = isPlural(types);
   const verb = {
     [OUTCOMES.ALLOW]: `may go to ${target}`,
-    [OUTCOMES.REDACT]: `are stripped before anything reaches ${target}`,
-    [OUTCOMES.SUBSTITUTE]: `reach ${target} only as a mask`,
-    [OUTCOMES.BLOCK]: `never reach ${target}`,
+    [OUTCOMES.REDACT]: `${plural ? 'are' : 'is'} stripped before anything reaches ${target}`,
+    [OUTCOMES.SUBSTITUTE]: `${plural ? 'reach' : 'reaches'} ${target} only as a mask`,
+    [OUTCOMES.BLOCK]: `never ${plural ? 'reach' : 'reaches'} ${target}`,
   }[outcome];
 
   return {
     id: `${outcome}-${types.join('-')}-${scope}-${(recipient.host ?? recipient.name).replace(/[^a-z0-9]+/gi, '-')}`.toLowerCase(),
-    says: `${subject.charAt(0).toUpperCase()}${subject.slice(1)} ${verb}.`,
+    says: `${subject.charAt(0).toUpperCase()}${subject.slice(1)} ${verb}${until}.`,
     data: types,
     recipient: spec,
     outcome,
-    ...(scope === 'session' ? { expires: new Date(Date.now() + HOUR_MS).toISOString() } : {}),
+    ...(expiresAt ? { expires: expiresAt.toISOString() } : {}),
     provenance: {
       source: 'granted-mid-task',
       at: new Date().toISOString(),

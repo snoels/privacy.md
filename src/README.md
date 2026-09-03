@@ -16,7 +16,9 @@ make on stage.
 
 ```bash
 cd src && npm install
+npx . init                                       # the questionnaire
 npx . install --dir /path/to/a/scratch/project   # registers the PreToolUse hook
+npx . rules                                      # what your constitution says, in plain English
 npx . report                                     # what was withheld, and how often you were asked
 ```
 
@@ -35,6 +37,10 @@ one.
 | `kernel/composite.js` | Redacts *inside* a value that carries a nested payload |
 | `kernel/constitution.js` | Loads and layers the policy; `asTemplate` strips it for sharing |
 | `kernel/ledger.js` | Records every decision; produces the minimization ratio |
+| `kernel/questions.js` | The presets, the questions, and the rules each answer writes |
+| `kernel/freetext.js` | Rules typed in the user's own words |
+| `bin/ui.js` | Terminal widgets — select with live preview, the settings matrix |
+| `bin/onboard.js` | The onboarding flow, and the closing rehearsal |
 | `adapters/claude-code.js` | The `PreToolUse` hook |
 | `constitutions/balanced.yaml` | The starting rule set |
 
@@ -59,6 +65,37 @@ interception, the outcome model end to end, and the minimization ratio.
 Item 4 was proven the same way: a held call reached the user as a seven-option
 menu inside the session, `decide` wrote the rule, and the retry was no longer
 held.
+
+## Onboarding
+
+`npx . init` is three screens and six questions.
+
+**Pick a preset** — Cautious, Balanced, Open — with the resulting settings
+previewed live as the cursor moves.
+
+**Answer only what the presets disagree on.** Seven questions are defined; six
+are asked, because all three presets answer the credentials question the same
+way. Presets tune how often you are asked, not whether a secret can leave. Each
+answer previews the rule it writes.
+
+**Review the table.** One row per data type, five settings, arrow keys. The
+preset filled it in; you change what you care about.
+
+Then free text in your own words, compiled to rules and shown back before
+saving — with anything we could not parse reported rather than silently
+dropped. Then your own email and phone, which is what lets the kernel tell your
+contact details from someone else's.
+
+It closes on a rehearsal: the new constitution run against five flows you will
+recognise, so no rule ships unseen.
+
+```
+    redact      a health note into your calendar
+    allow       the same note to your clinic
+    redact      a colleague's number to an outside tool
+    block       an API key in a request
+    ask         your email to a site you have never used
+```
 
 ## The hold loop stays inside the agent
 
@@ -109,5 +146,6 @@ redacting an event's `start` breaks the task while looking like the kernel worke
 
 ## Next
 
-Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-4 are done.
-Next: onboarding (item 5) — the preset, the review table, and free-text rules.
+Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-5 are done.
+Next: history inference and the session summary (item 6), which the first two
+acts of the demo both depend on.

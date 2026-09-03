@@ -84,7 +84,7 @@ async function main() {
     emit(
       decisionOutput('deny', {
         permissionDecisionReason: [
-          `Blocked by your privacy constitution — ${result.recipient.name} may not receive this.`,
+          `Blocked by your privacy constitution. ${result.recipient.name} may not receive this.`,
           '',
           describe(result),
           '',
@@ -108,7 +108,7 @@ async function main() {
         permissionDecisionReason: [
           `Held by your privacy constitution before this reaches ${result.recipient.name}.`,
           result.recipient.chosenBy === 'agent'
-            ? 'You did not pick this destination — the agent did.'
+            ? 'You did not pick this destination, the agent did.'
             : `Recipient is ${result.recipient.trust.replace(/_/g, ' ')}.`,
           '',
           ...result.reasons.map((reason) => `  · ${reason}`),

@@ -259,10 +259,15 @@ You answer in the conversation. The command records it:
     Retry the call. The constitution now covers it.
 ```
 
-Every option carries the rule it would write, all of them at once. There is no
-cursor to hover, so the width of a grant has to be visible on the line itself.
-"Allow for healthcare services" and "Allow for clinic.example" look almost
-identical until you can read the two rules side by side.
+The menu is a data structure, not a screen, and that is why it has two
+surfaces. Relayed through the agent it is a numbered list with every rule shown
+at once. Answered at your own terminal, `decide 7f3a91` with no number gives you
+an arrow-key picker with the rule previewing as the cursor moves. Same
+`menuFor()` behind both.
+
+Either way the width of the grant has to be readable before it is taken. "Allow
+for clinic.example" and "Allow for healthcare services" look almost identical
+until you see that one names a host and the other names a sector.
 
 ### Said out loud
 
@@ -410,9 +415,9 @@ CVE needs checking against a primary source before it is projected.
 
 ## What the slides claim, against what the build does
 
-Checked against `main` at `0767e96` plus the uncommitted work in the tree
-(`kernel/pending.js`, and changes to the adapter, the CLI and
-`kernel/constitution.js`). All 24 tests pass.
+Checked against `main` at `8d3c24f`, "The hold loop, inline in the agent
+session". All 24 tests pass. Re-check this section whenever the kernel moves,
+because it moved twice while these slides were being written.
 
 ### Backed by code
 
@@ -446,14 +451,29 @@ Checked against `main` at `0767e96` plus the uncommitted work in the tree
 - **Slide 2's accept-edit-skip screen.** There is no `init` flow that proposes
   inferred rules. `init` writes a preset and stops.
 
-### Two things to fix before either reaches a projector
+### Fixed since the first draft of these slides
 
-- **A grammar bug in the emitted menu.** `DATA_WORDS` in `kernel/rules.js` holds
-  possessives (`contact: 'your contact details'`), and the redact consequence
-  reads `` `${where} gets no ${subject}` ``. Together they print "clinic.example
-  gets no your contact details". Slide 3 shows the corrected wording. The fix is
-  either non-possessive data words plus a possessive added where it reads well,
-  or a separate short form for mid-sentence use.
-- **An em-dash in product copy.** The adapter emits "You did not pick this
-  destination — the agent did." That goes on screen, and it is against house
-  style. Slide 3 shows it with a comma.
+- **The grammar of the emitted menu.** `DATA_WORDS` held one possessive string
+  per data type and used it in two grammatical positions, which printed
+  "clinic.example gets no your contact details". It now holds a bare noun plus
+  whether the data is the user's own, so a determiner gets "gets no contact
+  details" and the head of a sentence gets "Your contact details". Two data
+  types are singular ("salary history", "precise location") against a verb table
+  that assumed plural, so the verbs agree now too.
+- **A session grant read exactly like a permanent one.** "Allow for the next
+  hour" and "Allow for clinic.example" both previewed "Your contact details may
+  go to clinic.example.", which defeats the point of showing the rule. The
+  hour-long one now says "until 06:12 PM".
+- **Em-dashes in copy that reaches a screen**, in the adapter, the CLI and the
+  preset.
+
+### Still to sweep
+
+Em-dashes remain in emitted strings in `bin/onboard.js` and `kernel/questions.js`.
+Those files arrived while these slides were being written and are still being
+edited, so they are left alone rather than fought over.
+
+Slide 2 needs re-checking against them. `bin/onboard.js`, `kernel/questions.js`
+and `kernel/freetext.js` now exist, which means the accept-edit-skip screen and
+the free-text compiler may both be real. This section said they were not, a few
+minutes ago.
