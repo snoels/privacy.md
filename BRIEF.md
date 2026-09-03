@@ -30,7 +30,7 @@ Two phases: a one-time setup, then a check on every call the agent makes.
 
 ```
   ONCE, AT INSTALL
-  npx privacy-constitution init
+  npx privacy.md init
         │
         ├─ pick a preset            Cautious · Balanced · Open
         ├─ ~7 questions             only where the presets disagree
@@ -337,7 +337,7 @@ protecting sources has genuinely different needs from a doctor, and those
 profiles carry no facts about anyone, so they ship safely.
 
 ```
-$ npx privacy-constitution init --profile journalist
+$ npx privacy.md init --profile journalist
 
   installed  journalist@1.2.0        34 rules
   installed  eu-baseline@2026.1      18 rules, inherited

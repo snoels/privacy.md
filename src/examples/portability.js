@@ -32,7 +32,7 @@ function viaClaudeCode(tool, input, home) {
   const raw = execFileSync('node', [HOOK], {
     input: JSON.stringify({ session_id: 'demo', hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input }),
     encoding: 'utf8',
-    env: { ...process.env, PRIVACY_CONSTITUTION_HOME: home },
+    env: { ...process.env, PRIVACY_MD_HOME: home },
   });
   const out = JSON.parse(raw).hookSpecificOutput;
   if (out.permissionDecision === 'deny') return { decision: 'block', sent: null };

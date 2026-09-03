@@ -128,7 +128,7 @@ test('the same recipient always sees the same mask', () => {
 });
 
 test('a missing constitution falls back to a preset rather than to permitting everything', () => {
-  const fallback = loadConstitution({ path: '/nonexistent/constitution.yaml' });
+  const fallback = loadConstitution({ path: '/nonexistent/rules.yaml' });
   assert.ok(fallback.isFallback);
   assert.ok(fallback.rules.length > 0);
 });

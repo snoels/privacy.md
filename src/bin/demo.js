@@ -118,12 +118,12 @@ const paint = {
  *
  * The real thing is interactive, and a stage demo cannot wait for arrow keys.
  * These are the actual screens with the choices already made, and it says so —
- * `npx privacy-constitution init` runs them live for anyone who wants to try.
+ * `npx privacy.md init` runs them live for anyone who wants to try.
  */
 async function actSetup() {
-  await act('0', 'Setting it up', 'Replayed at speed. `npx privacy-constitution init` runs this for real.');
+  await act('0', 'Setting it up', 'Replayed at speed. `npx privacy.md init` runs this for real.');
 
-  line(`    ${style.grey('$')} npx privacy-constitution init`);
+  line(`    ${style.grey('$')} npx privacy.md init`);
   line();
   await wait(BEAT);
 
@@ -157,12 +157,12 @@ async function actSetup() {
   await wait(BEAT);
 
   line();
-  line(`    ${style.green(`${constitution.rules.length} rules written to ~/.constitution/constitution.yaml`)}`);
+  line(`    ${style.green(`${constitution.rules.length} rules written to ~/.privacy/rules.yaml`)}`);
   line(`    ${style.grey('local, never uploaded — a rule about your health leaks it by existing')}`);
   await wait(BEAT);
 
   line();
-  line(`    ${style.grey('$')} npx privacy-constitution install`);
+  line(`    ${style.grey('$')} npx privacy.md install`);
   line(`    ${style.green('Hook registered — every tool call now goes through the kernel first.')}`);
 }
 
@@ -368,7 +368,7 @@ async function actPortability() {
         tool_input: input,
       }),
       encoding: 'utf8',
-      env: { ...process.env, PRIVACY_CONSTITUTION_HOME: home },
+      env: { ...process.env, PRIVACY_MD_HOME: home },
     });
     const viaHook = JSON.parse(raw).hookSpecificOutput.updatedInput ?? input;
 

@@ -14,8 +14,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { check } from '../kernel/index.js';
 import {
-  CONSTITUTION_HOME,
-  CONSTITUTION_PATH,
+  PRIVACY_HOME,
+  RULES_PATH,
   POLICY_PATH,
   loadConstitution,
   loadYaml,
@@ -37,6 +37,15 @@ import { fieldDiff, panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
+
+/**
+ * Is this hook ours?
+ *
+ * The registered command is a filesystem path, so it carries whatever the
+ * checkout happens to be called rather than the package name. The adapter's
+ * own path is the part that does not move.
+ */
+const INSTALLED_HOOK = /adapters[/\\]claude-code\.js/;
 
 const ESC = '[';
 const bold = (text) => `${ESC}1m${text}${ESC}0m`;
@@ -93,16 +102,16 @@ function install({ scope = 'project', dir = process.cwd() } = {}) {
 
 /** Non-interactive fallback: used by `install`, and where there is no terminal. */
 function initConstitution({ preset = 'balanced', force = false, email, phone } = {}) {
-  if (existsSync(CONSTITUTION_PATH) && !force) {
-    return { path: CONSTITUTION_PATH, existed: true };
+  if (existsSync(RULES_PATH) && !force) {
+    return { path: RULES_PATH, existed: true };
   }
   const base = buildPreset(preset, {
     identity: { ...(email ? { email } : {}), ...(phone ? { phone } : {}) },
   });
-  mkdirSync(CONSTITUTION_HOME, { recursive: true });
+  mkdirSync(PRIVACY_HOME, { recursive: true });
   writeFileSync(POLICY_PATH, toMarkdown(base, { preset }), 'utf8');
   saveConstitution(base);
-  return { path: CONSTITUTION_PATH, existed: false };
+  return { path: RULES_PATH, existed: false };
 }
 
 /**
@@ -117,24 +126,24 @@ function doctor({ dir = process.cwd() } = {}) {
   const problems = [];
   const ok = [];
 
-  if (existsSync(CONSTITUTION_PATH)) {
+  if (existsSync(RULES_PATH)) {
     const constitution = loadConstitution();
-    ok.push(`${constitution.rules.length} rules at ${CONSTITUTION_PATH}`);
+    ok.push(`${constitution.rules.length} rules at ${RULES_PATH}`);
     for (const warning of warnings(constitution)) problems.push([warning.says, warning.fix]);
   } else {
     problems.push([
       'No constitution — the preset is standing in for one.',
-      'npx privacy-constitution init',
+      'npx privacy.md init',
     ]);
   }
 
   const settingsPath = join(dir, '.claude', 'settings.json');
   const settings = readJson(settingsPath);
   const registered = (settings.hooks?.PreToolUse ?? []).some((entry) =>
-    (entry.hooks ?? []).some((hook) => hook.command?.includes('privacy-constitution')),
+    (entry.hooks ?? []).some((hook) => INSTALLED_HOOK.test(hook.command ?? '')),
   );
   if (registered) ok.push(`hook registered in ${settingsPath}`);
-  else problems.push([`No hook in ${settingsPath} — nothing is being checked here.`, `npx privacy-constitution install --dir ${dir}`]);
+  else problems.push([`No hook in ${settingsPath} — nothing is being checked here.`, `npx privacy.md install --dir ${dir}`]);
 
   // The only check that matters: does a call carrying something personal
   // actually get stopped?
@@ -146,7 +155,7 @@ function doctor({ dir = process.cwd() } = {}) {
     loadConstitution(),
   );
   if (probe.decision === 'allow') {
-    problems.push(['A test call carrying an email was allowed through.', 'npx privacy-constitution rules']);
+    problems.push(['A test call carrying an email was allowed through.', 'npx privacy.md rules']);
   } else {
     ok.push(`a personal detail to an unknown service is ${probe.decision}`);
   }
@@ -165,9 +174,9 @@ function doctor({ dir = process.cwd() } = {}) {
 
 /** The onboarding flow: preset, the contested questions, the review table. */
 async function runOnboarding({ force = false } = {}) {
-  const existing = existsSync(CONSTITUTION_PATH);
+  const existing = existsSync(RULES_PATH);
   if (existing && !force) {
-    console.log(dim(`You already have a constitution at ${CONSTITUTION_PATH}.`));
+    console.log(dim(`You already have a constitution at ${RULES_PATH}.`));
     console.log(dim('Run with --force to start over, or `rules` to see what it says.'));
     return;
   }
@@ -190,14 +199,14 @@ async function runOnboarding({ force = false } = {}) {
 
   // The readable file first, then the machine's copy compiled from it. That
   // order is the point: a policy nobody can read is one nobody has agreed to.
-  mkdirSync(CONSTITUTION_HOME, { recursive: true });
+  mkdirSync(PRIVACY_HOME, { recursive: true });
   writeFileSync(POLICY_PATH, toMarkdown(constitution, { preset }), 'utf8');
   saveConstitution(constitution);
 
   console.log();
   console.log(green(`  Your privacy policy: ${POLICY_PATH}`));
   console.log(dim(`  ${constitution.rules.length} rules, in plain English. Open it — it is yours to edit.`));
-  console.log(green(`  Compiled to:         ${CONSTITUTION_PATH}`));
+  console.log(green(`  Compiled to:         ${RULES_PATH}`));
   console.log(dim(`  Interruption budget: ${budget} a day. The report measures against it.`));
 
   console.log();
@@ -206,8 +215,8 @@ async function runOnboarding({ force = false } = {}) {
   for (const line of rehearse(constitution)) console.log(`    ${line}`);
 
   console.log();
-  console.log(dim('  Next: npx privacy-constitution install    (registers the hook in this project)'));
-  console.log(dim('        npx privacy-constitution try        (one call, before and after)'));
+  console.log(dim('  Next: npx privacy.md install    (registers the hook in this project)'));
+  console.log(dim('        npx privacy.md try        (one call, before and after)'));
   console.log();
 }
 
@@ -279,7 +288,7 @@ function showRules() {
     }
     console.log();
   }
-  console.log(dim(`  ${CONSTITUTION_PATH}`));
+  console.log(dim(`  ${RULES_PATH}`));
   console.log();
 }
 
@@ -399,7 +408,7 @@ async function decide(id, choice) {
     saveConstitution({ ...current, rules: [...rules, rule] });
     console.log(green(`  rule added: ${rule.says}`));
     if (rule.expires) console.log(dim(`  expires ${new Date(rule.expires).toLocaleTimeString()}`));
-    console.log(dim(`  ${CONSTITUTION_PATH}`));
+    console.log(dim(`  ${RULES_PATH}`));
   } else {
     console.log(dim('  nothing recorded -- this call only'));
   }
@@ -421,7 +430,7 @@ function holds() {
     for (const [index, option] of menuFor(hold).entries()) {
       console.log(`     ${index + 1}. ${option.label}  ${dim(option.consequence)}`);
     }
-    console.log(dim(`     npx privacy-constitution decide ${hold.id} <number>`));
+    console.log(dim(`     npx privacy.md decide ${hold.id} <number>`));
   }
 }
 
@@ -432,7 +441,7 @@ function holds() {
  * quotes your secrets back at you on a projector is its own incident.
  */
 async function runScan({ days = 30, apply = false, includeFixtures = false } = {}) {
-  const constitution = existsSync(CONSTITUTION_PATH) ? loadConstitution() : { rules: [] };
+  const constitution = existsSync(RULES_PATH) ? loadConstitution() : { rules: [] };
   const since = Date.now() - days * 24 * 60 * 60 * 1000;
 
   process.stdout.write(dim('  reading transcripts... '));
@@ -492,7 +501,7 @@ async function runScan({ days = 30, apply = false, includeFixtures = false } = {
       const kept = (constitution.rules ?? []).filter((rule) => !added.some((one) => one.id === rule.id));
       saveConstitution({ ...constitution, rules: [...kept, ...added] });
       console.log();
-      console.log(green(`  ${added.length} rules added to ${CONSTITUTION_PATH}`));
+      console.log(green(`  ${added.length} rules added to ${RULES_PATH}`));
     } else {
       console.log();
       console.log(dim('  Run with --apply to add these. Nothing has been changed.'));
@@ -610,7 +619,11 @@ switch (command) {
         email: value('email'),
         phone: value('phone'),
       });
-      console.log(existed ? dim(`Constitution already at ${path} (use --force to reset)`) : green(`Constitution written to ${path}`));
+      console.log(
+        existed
+          ? dim(`Your privacy.md is already at ${POLICY_PATH} (use --force to reset)`)
+          : green(`Written to ${POLICY_PATH}, compiled to ${path}`),
+      );
     } else {
       await runOnboarding({ force: flag('force') });
     }
@@ -637,7 +650,7 @@ switch (command) {
     console.log(
       already ? dim(`Hook already registered in ${settingsPath}`) : green(`Hook registered in ${settingsPath}`),
     );
-    console.log(dim(`Constitution: ${CONSTITUTION_PATH}`));
+    console.log(dim(`Constitution: ${RULES_PATH}`));
     break;
   }
   case 'decide':

@@ -12,13 +12,13 @@
 
 import { appendFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONSTITUTION_HOME } from './constitution.js';
+import { PRIVACY_HOME } from './constitution.js';
 
-export const LEDGER_PATH = join(CONSTITUTION_HOME, 'ledger.jsonl');
+export const LEDGER_PATH = join(PRIVACY_HOME, 'ledger.jsonl');
 
 export function record(entry, path = LEDGER_PATH) {
   try {
-    mkdirSync(CONSTITUTION_HOME, { recursive: true });
+    mkdirSync(PRIVACY_HOME, { recursive: true });
     appendFileSync(path, `${JSON.stringify({ at: new Date().toISOString(), ...entry })}\n`, 'utf8');
   } catch {
     // A ledger write must never take the agent down with it.

@@ -14,9 +14,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
-import { CONSTITUTION_HOME } from './constitution.js';
+import { PRIVACY_HOME } from './constitution.js';
 
-export const PENDING_DIR = join(CONSTITUTION_HOME, 'pending');
+export const PENDING_DIR = join(PRIVACY_HOME, 'pending');
 
 /** Holds older than this are stale — the agent moved on without deciding. */
 const STALE_MS = 30 * 60 * 1000;

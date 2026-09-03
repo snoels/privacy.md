@@ -8,7 +8,7 @@
  * That ordering matters more than it looks. A privacy rule you cannot read is a
  * privacy rule you cannot disagree with, and a policy nobody disagrees with is
  * one nobody has actually agreed to. This is the file a person reads, edits,
- * and hands to someone else; `constitution.yaml` is the machine's copy of it.
+ * and hands to someone else; `rules.yaml` is the machine's copy of it.
  */
 
 const OUTCOME_WORDS = {
@@ -95,7 +95,7 @@ export function toMarkdown(constitution, { preset } = {}) {
 
   out.push('---', '');
   out.push(`_${rules.length} rules${preset ? `, from the **${preset}** preset` : ''}._`);
-  out.push('_Edit this file, then run `npx privacy-constitution compile` to put it into force._');
+  out.push('_Edit this file, then run `npx privacy.md compile` to put it into force._');
 
   return `${out.join('\n')}\n`;
 }

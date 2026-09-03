@@ -137,8 +137,8 @@ quotes your secrets back at you on a projector is its own incident.
 
 ## Two files, and the order matters
 
-`init` writes **`~/.constitution/privacy.md`** first — your policy in plain
-English — and compiles `constitution.yaml` from it. The YAML is precise and
+`init` writes **`~/.privacy/privacy.md`** first — your policy in plain
+English — and compiles `rules.yaml` from it. The YAML is precise and
 matchable, and nobody will ever audit it. The Markdown is the one a person
 reads, edits, and hands to someone else.
 
@@ -331,7 +331,7 @@ the agent is already a conversation with the user.
         │
   agent shows the options and asks           ← inline, in the session
         │
-  npx privacy-constitution decide <id> <n>   ← writes the rule
+  npx privacy.md decide <id> <n>   ← writes the rule
         │
   agent retries; the constitution now covers it
 ```

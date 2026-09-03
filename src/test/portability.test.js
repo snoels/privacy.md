@@ -32,7 +32,7 @@ function throughClaudeCode(tool, input, home) {
   const raw = execFileSync('node', [HOOK], {
     input: JSON.stringify({ session_id: 'test', hook_event_name: 'PreToolUse', tool_name: tool, tool_input: input }),
     encoding: 'utf8',
-    env: { ...process.env, PRIVACY_CONSTITUTION_HOME: home },
+    env: { ...process.env, PRIVACY_MD_HOME: home },
   });
   const { hookSpecificOutput: out } = JSON.parse(raw);
   return {

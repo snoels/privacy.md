@@ -68,7 +68,7 @@ function explain(result, { held } = {}) {
         ].join('\n');
       }),
       '',
-      `Then run: npx privacy-constitution decide ${held.id} <number>`,
+      `Then run: npx privacy.md decide ${held.id} <number>`,
     );
   } else {
     lines.push('', 'Retry without those fields, or ask the user to change the rule.');

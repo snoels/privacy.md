@@ -18,14 +18,14 @@ import YAML from 'yaml';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-export const CONSTITUTION_HOME = process.env.PRIVACY_CONSTITUTION_HOME
-  ? resolve(process.env.PRIVACY_CONSTITUTION_HOME)
-  : join(homedir(), '.constitution');
+export const PRIVACY_HOME = process.env.PRIVACY_MD_HOME
+  ? resolve(process.env.PRIVACY_MD_HOME)
+  : join(homedir(), '.privacy');
 
-export const CONSTITUTION_PATH = join(CONSTITUTION_HOME, 'constitution.yaml');
+export const RULES_PATH = join(PRIVACY_HOME, 'rules.yaml');
 
 /** The readable half. What a person opens; the YAML is compiled from it. */
-export const POLICY_PATH = join(CONSTITUTION_HOME, 'privacy.md');
+export const POLICY_PATH = join(PRIVACY_HOME, 'privacy.md');
 
 export function presetPath(name) {
   return join(HERE, '..', 'constitutions', `${name}.yaml`);
@@ -39,7 +39,7 @@ export function loadYaml(path) {
  * Load the user's constitution, falling back to a preset when they have not run
  * `init` yet. A missing constitution must never mean "allow everything".
  */
-export function loadConstitution({ path = CONSTITUTION_PATH, fallbackPreset = 'balanced' } = {}) {
+export function loadConstitution({ path = RULES_PATH, fallbackPreset = 'balanced' } = {}) {
   if (existsSync(path)) return { ...loadYaml(path), source: path };
   const preset = presetPath(fallbackPreset);
   return { ...loadYaml(preset), source: preset, isFallback: true };
@@ -58,7 +58,7 @@ export function mergeLayers(...layers) {
 /** Runtime bookkeeping that `loadConstitution` adds; never part of the policy. */
 const RUNTIME_KEYS = ['source', 'isFallback'];
 
-export function saveConstitution(constitution, path = CONSTITUTION_PATH) {
+export function saveConstitution(constitution, path = RULES_PATH) {
   const policy = { ...constitution };
   for (const key of RUNTIME_KEYS) delete policy[key];
   mkdirSync(dirname(path), { recursive: true });
@@ -83,7 +83,7 @@ export function warnings(constitution) {
       id: 'no-identity',
       says: 'No identity set, so your own contact details read as someone else\'s.',
       because: 'They get stripped rather than masked, and calls that need them will fail.',
-      fix: 'npx privacy-constitution init --force, or add identity.email to the file.',
+      fix: 'npx privacy.md init --force, or add identity.email to the file.',
     });
   }
 
@@ -92,7 +92,7 @@ export function warnings(constitution) {
       id: 'no-rules',
       says: 'This constitution has no rules, so nothing is being checked.',
       because: 'Every call will pass through untouched.',
-      fix: 'npx privacy-constitution init',
+      fix: 'npx privacy.md init',
     });
   }
 
