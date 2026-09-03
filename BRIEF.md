@@ -663,10 +663,30 @@ rather than the proof.
 
 #### The name
 
-Unclaimed. It appears in the `npx` line, which is on screen for most of the
-demo, so it is worth ten minutes.
+**Decided: `privacy.md`.**
 
-*Unresolved.* `privacy-constitution` is the working title, not a decision.
+`AGENTS.md` is read natively by more than thirty agent runtimes, sits in over
+60,000 repositories, and its stewardship has moved to the Linux Foundation. It
+is the proven shape for something that spreads: a filename everyone implements
+and nobody owns. That slot has an obvious empty neighbour.
+
+> Every one of these runtimes already reads a markdown file to learn how to work
+> in your repo. Not one of them reads a file to learn what it may send out.
+
+It also separates the two Do Not Track failures rather than only the first one.
+DNT was a header you asked strangers to honour. This is a file your own tools
+already read, so standing next to `AGENTS.md` makes the difference visible
+without explaining it.
+
+The cost is real and worth taking: a convention name is unownable by design.
+`privacy.md` is unsearchable, untrademarkable and clumsy said out loud, which is
+exactly why `AGENTS.md` spread and exactly why it will never be a company. If
+something ownable is wanted later, the split is that `privacy.md` is the spec
+and the kernel that enforces it takes a short name of its own. P3P's full lesson
+is both halves: do not rely on the recipient, and do not publish a spec with no
+reference implementation.
+
+`privacy.md`, `privacy-md` and `constitution.md` are all free on npm.
 
 #### Scope of the third-party subject problem
 

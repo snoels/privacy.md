@@ -43,6 +43,7 @@ one.
 | `bin/ui.js` | Terminal widgets — select with live preview, the settings matrix |
 | `bin/onboard.js` | The onboarding flow, and the closing rehearsal |
 | `adapters/claude-code.js` | The `PreToolUse` hook |
+| `adapters/openai-agents.js` | The OpenAI Agents SDK adapter — wraps tools, all five outcomes |
 | `constitutions/balanced.yaml` | The starting rule set |
 
 ## What is proven so far
@@ -124,6 +125,50 @@ recognise, so no rule ships unseen.
     ask         your email to a site you have never used
 ```
 
+## Portability, which is the whole claim
+
+Same constitution file, two runtimes, neither aware of the other:
+
+```bash
+node examples/portability.js
+```
+
+```
+  Put the appointment in my calendar
+    agent proposes  {"title":"Appointment","start":"2026-09-11T14:00+02:00","notes":"Physio, lower back injury"}
+    Claude Code     minimized  {"title":"Appointment","start":"2026-09-11T14:00+02:00"}
+    OpenAI SDK      minimized  {"title":"Appointment","start":"2026-09-11T14:00+02:00"}
+    identical
+```
+
+The weaker claim is that both refuse the same things — a blocklist could do
+that. The claim worth making is that both send *the same smaller payload*, and
+`test/portability.test.js` asserts exactly that rather than a hard-coded
+expectation, so the pitch cannot quietly stop being true.
+
+```js
+import { guardAll } from 'privacy-constitution/adapters/openai-agents.js';
+
+const agent = new Agent({
+  tools: guardAll([bookAppointment, createEvent], {
+    // The SDK has no notion of what a tool talks to -- a function called
+    // `send_email` could reach anything -- so declaring it is how a rule about
+    // healthcare services finds its target.
+    recipients: {
+      book_appointment: { name: 'Doctolib', sector: 'healthcare', trust: 'known' },
+      create_calendar_event: { name: 'Google Calendar', sector: 'productivity', trust: 'known' },
+    },
+  }),
+});
+```
+
+**Why this wraps tools rather than using the SDK's own guardrails.**
+`defineToolInputGuardrail` can allow, reject, or throw — it cannot rewrite the
+call. Block and ask would work; redact and substitute would not, and those are
+the outcomes the design rests on. A guardrail that can only refuse turns a
+privacy tool into a nuisance. `constitutionGuardrail` is exported anyway for
+anyone who wants the native integration and is content with block and ask.
+
 ## The hold loop stays inside the agent
 
 A `PreToolUse` hook has no terminal of its own — stdin carries the tool call and
@@ -173,6 +218,6 @@ redacting an event's `start` breaks the task while looking like the kernel worke
 
 ## Next
 
-Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-6 are done.
-Next: the OpenAI Agents SDK adapter (item 7), which is the portability proof,
-then the 24-probe conformance suite (item 8).
+Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-7 are done.
+Next: the 24-probe conformance suite (item 8) — the closing number, and the
+thing nobody else will have.

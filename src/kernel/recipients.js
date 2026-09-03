@@ -100,6 +100,21 @@ export function classifyRecipient(call, context = {}) {
   const input = call.input ?? {};
   const options = { treatLoopbackAsEgress: context.treatLoopbackAsEgress === true };
 
+  // A caller that knows what a tool talks to can say so. Tool names in Claude
+  // Code carry their server (`mcp__gmail__send`); a plain SDK function called
+  // `send_email` does not, and guessing from the verb would be worse than
+  // letting the developer declare it.
+  if (call.recipient) {
+    return {
+      host: null,
+      sector: 'unknown',
+      trust: 'known',
+      chosenBy: 'user',
+      name: call.recipient.name ?? tool,
+      ...call.recipient,
+    };
+  }
+
   if (MODEL_PROVIDER_TOOLS.test(tool)) {
     return { name: 'your model provider', trust: 'model_provider', sector: 'model_provider', host: null, chosenBy: 'runtime' };
   }
