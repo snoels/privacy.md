@@ -13,16 +13,35 @@
 import { emitKeypressEvents } from 'node:readline';
 
 const ESC = '\u001b[';
+
+/**
+ * Colour only where something can render it.
+ *
+ * Piping into a pager without `-R`, or into a file, otherwise fills the output
+ * with literal escape codes — which is exactly the kind of thing that goes
+ * wrong in front of an audience. `NO_COLOR` is honoured because it is the
+ * convention, and `FORCE_COLOR` because piping into `less -R` is legitimate.
+ *
+ * See https://no-color.org.
+ */
+const COLOUR =
+  process.env.FORCE_COLOR === '1' ||
+  (!process.env.NO_COLOR && process.env.TERM !== 'dumb' && process.stdout.isTTY === true);
+
+const paint = (open, close) => (text) => (COLOUR ? `${ESC}${open}m${text}${ESC}${close}m` : String(text));
+
 export const style = {
-  bold: (t) => `${ESC}1m${t}${ESC}22m`,
-  dim: (t) => `${ESC}2m${t}${ESC}22m`,
-  green: (t) => `${ESC}32m${t}${ESC}39m`,
-  amber: (t) => `${ESC}33m${t}${ESC}39m`,
-  red: (t) => `${ESC}31m${t}${ESC}39m`,
-  violet: (t) => `${ESC}35m${t}${ESC}39m`,
-  cyan: (t) => `${ESC}36m${t}${ESC}39m`,
-  grey: (t) => `${ESC}90m${t}${ESC}39m`,
+  bold: paint(1, 22),
+  dim: paint(2, 22),
+  green: paint(32, 39),
+  amber: paint(33, 39),
+  red: paint(31, 39),
+  violet: paint(35, 39),
+  cyan: paint(36, 39),
+  grey: paint(90, 39),
 };
+
+export { COLOUR };
 
 const hideCursor = () => process.stdout.write(`${ESC}?25l`);
 const showCursor = () => process.stdout.write(`${ESC}?25h`);
@@ -236,8 +255,16 @@ export async function text({ title, hint, placeholder = '' }) {
   return value;
 }
 
-/** Struck through, for a value that did not make it out. */
-export const struck = (text) => `${ESC}9m${ESC}2m${text}${ESC}22m${ESC}29m`;
+/**
+ * Struck through, for a value that did not make it out.
+ *
+ * Without colour there is no strikethrough, and a withheld value would read
+ * exactly like a sent one — so it falls back to marking the line instead. The
+ * distinction is the entire point of the view; losing it silently would be
+ * worse than losing the styling.
+ */
+export const struck = (text) =>
+  COLOUR ? `${ESC}9m${ESC}2m${text}${ESC}22m${ESC}29m` : `${text}   << withheld`;
 
 /**
  * A field-by-field view of what a service actually received.
