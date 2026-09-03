@@ -22,6 +22,30 @@ import { classifyRecipient } from './recipients.js';
 
 export const TRANSCRIPT_HOME = join(homedir(), '.claude', 'projects');
 
+/**
+ * Hosts that only ever appear in tests and documentation.
+ *
+ * Counting these inflates the report with flows that never happened. Anyone
+ * building a tool like this will have spent a week generating exactly this
+ * traffic on their own machine, and a leak report that counts it is a leak
+ * report nobody should believe.
+ */
+const FIXTURE_HOSTS = [
+  /(^|\.)example\.(com|org|net)$/i,
+  /(^|\.)test$/i,
+  /(^|\.)invalid$/i,
+  /(^|\.)localhost$/i,
+  /(^|\.)acme\.com$/i,
+  /^unknown-crm\.io$/i,
+  /^never-seen-before\./i,
+  /^placeholder\./i,
+];
+
+function isFixture(recipient) {
+  const host = recipient.host ?? recipient.name ?? '';
+  return FIXTURE_HOSTS.some((pattern) => pattern.test(host));
+}
+
 /** Every transcript on the machine, newest first. */
 export function transcripts({ home = TRANSCRIPT_HOME, since } = {}) {
   if (!existsSync(home)) return [];
@@ -81,12 +105,20 @@ async function toolCalls(path) {
  * current constitution would have done about it. The gap between the two is the
  * whole point of the report.
  */
-export async function scan({ home = TRANSCRIPT_HOME, since, identity, limit = 400, onProgress } = {}) {
+export async function scan({
+  home = TRANSCRIPT_HOME,
+  since,
+  identity,
+  limit = 400,
+  onProgress,
+  includeFixtures = false,
+} = {}) {
   const files = transcripts({ home, since }).slice(0, limit);
 
   const observed = [];
   let callCount = 0;
   let scanned = 0;
+  let skippedFixtures = 0;
 
   for (const file of files) {
     let calls;
@@ -103,6 +135,10 @@ export async function scan({ home = TRANSCRIPT_HOME, since, identity, limit = 40
       const recipient = classifyRecipient(call, { identity });
       // Only egress counts. Reading a local file is not a disclosure.
       if (recipient.trust === 'self') continue;
+      if (!includeFixtures && isFixture(recipient)) {
+        skippedFixtures += 1;
+        continue;
+      }
 
       const findings = detect(call.input, { identity });
       if (findings.length === 0) continue;
@@ -120,7 +156,7 @@ export async function scan({ home = TRANSCRIPT_HOME, since, identity, limit = 40
     }
   }
 
-  return { files: files.length, scanned, calls: callCount, observed };
+  return { files: files.length, scanned, calls: callCount, observed, skippedFixtures };
 }
 
 /** Roll a scan up into the numbers the opening quotes. */

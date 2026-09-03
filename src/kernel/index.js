@@ -11,6 +11,7 @@ import { classifyRecipient } from './recipients.js';
 import { evaluate, OUTCOMES } from './evaluate.js';
 import { apply } from './apply.js';
 import { loadConstitution } from './constitution.js';
+import { judge } from './judge.js';
 
 /**
  * @param {{tool: string, input: object}} call
@@ -64,4 +65,35 @@ export function check(call, constitution) {
   };
 }
 
-export { detect, classifyRecipient, evaluate, apply, loadConstitution, OUTCOMES };
+/**
+ * The same check, with the model tier behind it.
+ *
+ * Async, and therefore a separate entry point: most callers want the fast
+ * synchronous path, and a hook that awaits a model on every tool call is a hook
+ * users switch off. The model only ever *adds* findings, so this can be
+ * stricter than `check` but never looser.
+ *
+ * @param {{tool: string, input: object}} call
+ * @param {object} constitution
+ * @param {{ask: Function, cache?: Map, timeoutMs?: number, onError?: Function}} model
+ */
+export async function checkDeep(call, constitution, model) {
+  const fast = check(call, constitution);
+  if (fast.local || !model?.ask) return fast;
+
+  // Nothing left to learn: the strictest outcome is already in force.
+  if (fast.decision === OUTCOMES.BLOCK) return fast;
+
+  const context = { identity: constitution?.identity };
+  const extra = await judge(call.input, fast.recipient, model);
+  if (extra.length === 0) return fast;
+
+  // Re-run the decision over both sets, so one engine reaches one verdict.
+  const findings = [...detect(call.input, context), ...extra];
+  const evaluation = evaluate({ findings, recipient: fast.recipient }, constitution);
+  const { input, changes, minimization } = apply(call.input, evaluation, context);
+
+  return { ...evaluation, input, changes, minimization, usedModel: true };
+}
+
+export { detect, classifyRecipient, evaluate, apply, loadConstitution, judge, OUTCOMES };

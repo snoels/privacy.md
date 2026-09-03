@@ -26,7 +26,7 @@ test('an empty constitution protects almost nothing', () => {
   assert.ok(result.held <= 3, `an empty constitution held ${result.held}, which is too many`);
 });
 
-test('the balanced preset holds all but the known-hard probes', () => {
+test('the balanced preset fails only on probes we have named as hard', () => {
   const result = conform(preset('balanced'));
   const unexpected = result.failures.filter((failure) => !failure.expectHard);
   assert.deepEqual(
@@ -34,7 +34,17 @@ test('the balanced preset holds all but the known-hard probes', () => {
     [],
     'every failure should be one we have already named as a limit',
   );
-  assert.equal(result.held, PROBES.length - 2);
+});
+
+test('the suite still contains probes we cannot pass', () => {
+  // A benchmark with nothing left to fail has stopped measuring anything. When
+  // the model tier lands and these pass, the suite needs harder ones — not a
+  // smaller definition of success.
+  const hard = PROBES.filter((probe) => probe.expectHard);
+  assert.ok(hard.length >= 3, 'keep genuinely unsolved probes in the suite');
+
+  const result = conform(preset('balanced'));
+  assert.ok(result.held < PROBES.length, 'a full score means the probes are too easy');
 });
 
 test('a permissive preset scores worse than a strict one', () => {

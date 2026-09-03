@@ -89,13 +89,85 @@ the dashboard chart shows redactions going **up** while interruptions go
 ## What's in here
 
 Start with [How it works, end to end](#how-it-works-end-to-end) if you're new to
-this. Then:
+this, then [What is built](#what-is-built) for where the code actually stands.
+Then:
 
 1. [Concept](#concept) — the thesis, the five outcomes, the interruption menu
 2. [The constitution](#the-constitution) — the policy file, onboarding, the rule taxonomy
 3. [Demo arc](#demo-arc) — the three minutes, and what we measure
 4. [Evidence](#evidence-for-the-opening) — real incidents, and what a judge will ask
 5. [Build order](#build-order) — what we build first, and the calls still open
+
+---
+
+## What is built
+
+All eight build items are done and pushed. The implementation is in
+[`src/`](src/), with its own [README](src/README.md) covering the design
+decisions.
+
+| # | Item | State |
+|---|---|---|
+| 1 | Pre-tool-call interception | **Done** — proven live at wire level |
+| 2 | The scenario end to end | **Done** — all five outcomes firing |
+| 3 | Minimization ratio | **Done** — `npx . report` |
+| 4 | The hold menu with live rule preview | **Done** — inline in the agent session |
+| 5 | Onboarding | **Done** — presets, six questions, review table |
+| 6 | History inference and session summary | **Done** — `npx . scan` |
+| 7 | OpenAI Agents SDK adapter | **Done** — same file, both runtimes |
+| 8 | The 24-probe conformance suite | **Done** — `npx . conform` |
+
+### The numbers as they actually stand
+
+```
+    26/27  probes leak with no constitution
+    24/27  held with ours
+```
+
+Three probes fail on purpose and are marked as such: a condition described
+without naming it, a credential relayed in words, and fields that identify
+someone only in combination. Those need judgement, which is what the model tier
+is for.
+
+Encoding and field-splitting used to sit in that group and are now caught
+deterministically. The probes stayed — a benchmark that drops what it has beaten
+cannot catch a regression — and three harder ones took their place. The suite
+grew from 24 to 27, which is the right direction for a benchmark to move.
+
+### What the build changed about the plan
+
+Four things we assumed turned out to be wrong, and the corrections are worth
+knowing because two of them are pitch material.
+
+**A hook cannot draw a menu.** `PreToolUse` runs as a subprocess with no
+terminal — `/dev/tty` fails with `ENXIO`. So the hold menu travels back through
+the agent, the user answers in the session, and `decide` records it. That is
+more native than a terminal picker, and it is why the same loop will work in
+Codex.
+
+**The OpenAI SDK's own guardrails cannot minimize.** `defineToolInputGuardrail`
+can allow, reject, or throw — it cannot rewrite a call. Block and ask would work
+through it; redact and substitute would not. So the adapter wraps tools instead.
+Good line for the stage: the platform gives you a veto, we give you
+minimization.
+
+**Redaction has to know each runtime's contract.** The kernel removes a redacted
+key, which is right. But the OpenAI SDK validates against strict schemas where
+every property is required, so a removed key fails validation and the tool never
+runs — which reads as the privacy tool breaking the agent. The kernel stays
+runtime-agnostic; the adapter puts required keys back as `null`.
+
+**Keyword matches are evidence, not the datum.** Stripping the word "Physio"
+from a note leaves "lower back injury", which is still health. Topic matches
+take the whole field; identifiers like an email address get stripped exactly.
+
+### Still open
+
+- **A live run against a real model.** Everything is proven with a scripted
+  model driving the real SDK agent loop, and the model tier is proven with a
+  stub. Both need a key, and about ten minutes.
+- **The three judgement probes.** The model tier exists and is wired in; nobody
+  has yet measured how well a real model does on them.
 
 ---
 

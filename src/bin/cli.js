@@ -312,12 +312,12 @@ function holds() {
  * The report redacts itself: counts and kinds, never values. A leak report that
  * quotes your secrets back at you on a projector is its own incident.
  */
-async function runScan({ days = 30, apply = false } = {}) {
+async function runScan({ days = 30, apply = false, includeFixtures = false } = {}) {
   const constitution = existsSync(CONSTITUTION_PATH) ? loadConstitution() : { rules: [] };
   const since = Date.now() - days * 24 * 60 * 60 * 1000;
 
   process.stdout.write(dim('  reading transcripts... '));
-  const raw = await scan({ since, identity: constitution.identity });
+  const raw = await scan({ since, identity: constitution.identity, includeFixtures });
   process.stdout.write('\r' + ' '.repeat(40) + '\r');
 
   const summary = summarizeScan(raw);
@@ -329,6 +329,11 @@ async function runScan({ days = 30, apply = false } = {}) {
   console.log(`  ${String(summary.calls).padStart(6)}  tool calls`);
   console.log(`  ${style.amber(String(summary.carrying).padStart(6))}  carried something personal`);
   console.log(`  ${String(summary.recipients).padStart(6)}  services received it`);
+  if (raw.skippedFixtures > 0) {
+    console.log(
+      `  ${dim(`${String(raw.skippedFixtures).padStart(6)}  ignored as test fixtures (example.com, .test, localhost). --include-fixtures to count them.`)}`,
+    );
+  }
 
   if (summary.spread.length > 0) {
     console.log();
@@ -515,7 +520,11 @@ switch (command) {
     report();
     break;
   case 'scan':
-    await runScan({ days: Number(value('days', 30)), apply: flag('apply') });
+    await runScan({
+      days: Number(value('days', 30)),
+      apply: flag('apply'),
+      includeFixtures: flag('include-fixtures'),
+    });
     break;
   case 'conform':
     runConform({ compare: flag('compare'), verbose: flag('verbose') });

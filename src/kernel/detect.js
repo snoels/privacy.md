@@ -10,6 +10,13 @@
  * strip one field precisely rather than mangle the whole payload.
  */
 
+import { decodings, joinedNeighbours } from './encoded.js';
+
+/** Read the value at a path, for reporting what a split match actually held. */
+function getAt(payload, path) {
+  return path.reduce((node, key) => (node == null ? node : node[key]), payload);
+}
+
 /** Field names that name a data type outright, whatever the value looks like. */
 const FIELD_NAMES = {
   credentials: /^(api[_-]?key|apikey|secret|token|password|passwd|pwd|auth|authorization|bearer|private[_-]?key|ssh[_-]?key|client[_-]?secret|access[_-]?token|refresh[_-]?token|credentials?)$/i,
@@ -85,11 +92,26 @@ function ownsContact(text, identity) {
   return mine.some((value) => normalized.includes(value));
 }
 
+/** Run every value pattern over one string. */
+function patternsIn(text) {
+  const hits = [];
+  for (const { type, re, label, reject } of VALUE_PATTERNS) {
+    const match = re.exec(text);
+    if (!match) continue;
+    if (reject?.(match[0], text)) continue;
+    hits.push({ type, label: label ?? type, excerpt: match[0] });
+  }
+  return hits;
+}
+
 /**
  * Find every piece of personal data in a payload.
  *
  * @param {unknown} payload - the tool call's arguments
- * @param {{identity?: {email?: string, phone?: string, aliases?: string[]}}} [context]
+ * @param {{identity?: {email?: string, phone?: string, aliases?: string[]},
+ *          deep?: boolean}} [context]
+ *   `deep` also looks through encodings and across neighbouring fields. It is
+ *   on by default; turn it off where throughput matters more than coverage.
  * @returns {Array<{path: (string|number)[], type: string, via: string, excerpt: string}>}
  */
 export function detect(payload, context = {}) {
@@ -110,11 +132,43 @@ export function detect(payload, context = {}) {
       if (re.test(fieldName)) add(path, type, `field:${fieldName}`, text);
     }
 
-    for (const { type, re, label, reject } of VALUE_PATTERNS) {
-      const match = re.exec(text);
-      if (!match) continue;
-      if (reject?.(match[0], text)) continue;
-      add(path, type, `pattern:${label ?? type}`, match[0]);
+    for (const hit of patternsIn(text)) {
+      add(path, hit.type, `pattern:${hit.label}`, hit.excerpt);
+    }
+
+    // Encoding is not concealment we should reward. A key base64'd on the way
+    // out is still a key leaving the machine.
+    if (context.deep !== false) {
+      for (const { text: decoded, via } of decodings(text)) {
+        for (const hit of patternsIn(decoded)) {
+          // The excerpt stays the *encoded* value, because that is the string
+          // that has to be removed from the payload.
+          add(path, hit.type, `${via}:${hit.label}`, text);
+        }
+      }
+    }
+  }
+
+  // A value split across two fields is not two harmless fragments. But only a
+  // match that *spans the boundary* counts: a hit already present in one field
+  // alone is that field's, and attributing it to its neighbour would redact
+  // whatever happened to sit next to it.
+  if (context.deep !== false) {
+    for (const join of joinedNeighbours(payload)) {
+      const parts = join.paths.map((target) => String(getAt(payload, target) ?? ''));
+      for (const hit of patternsIn(join.text)) {
+        // Compared by type, not by excerpt: a pattern reports only its first
+        // match, and joining two fields can shift which one that is. If the
+        // type is already present in either field alone, the split found
+        // nothing new.
+        const alreadyInOnePart = parts.some((part) =>
+          patternsIn(part).some((own) => own.type === hit.type),
+        );
+        if (alreadyInOnePart) continue;
+        for (const [index, target] of join.paths.entries()) {
+          add(target, hit.type, `split:${hit.label}`, parts[index]);
+        }
+      }
     }
   }
 

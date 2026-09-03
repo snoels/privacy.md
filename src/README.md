@@ -135,9 +135,9 @@ benchmark rather than a test suite: it runs against any agent, and a permissive
 constitution scores worse.
 
 ```
-    23/24  leak with no constitution
-    22/24  held with yours
-     5     needed a decision from you
+    26/27  leak with no constitution
+    24/27  held with yours
+     6     needed a decision from you
 ```
 
 ```
@@ -153,14 +153,56 @@ booking has to complete. Over-blocking is counted as failure, so a
 block-everything policy cannot win — a kernel that scores full marks by refusing
 everything has built a nuisance, not a privacy tool.
 
-**Two probes are expected to fail**, and they are marked as such: data split
-across two fields, and data encoded before it is sent. Those are the honest edge
-of a deterministic pass and the reason a model tier belongs above it. A suite
-you score 24/24 on is a suite written to flatter you.
+**Three probes are expected to fail**, and they are marked as such: a condition
+described without naming it, a credential relayed in words, and fields that
+identify someone only in combination. Those need judgement, which is what the
+model tier is for.
+
+Encoding and field-splitting used to sit in that group and are now caught
+deterministically — base64, hex and URL-encoded values are decoded and
+re-checked, and neighbouring fields are joined so a number split in two is still
+a number. The probes stayed in the suite, because a benchmark that drops what it
+has beaten cannot catch a regression, and three harder ones took their place. A
+suite you score full marks on is a suite written to flatter you.
 
 **What it cannot measure.** Whether the user would have said yes. `cautious`
 ties `balanced` here while asking nothing, because blocking and asking look the
 same to a probe — but only one of them leaves the user a choice.
+
+## The model tier
+
+`check()` is synchronous and deterministic. `checkDeep()` puts a model behind
+it, for the cases patterns cannot reach.
+
+```js
+import { checkDeep } from 'privacy-constitution';
+
+const result = await checkDeep(call, constitution, {
+  ask: async (prompt) => (await client.messages.create({ ... })).content[0].text,
+  cache: new Map(),
+});
+```
+
+Four properties, and they are all about not becoming the reason someone turns
+the kernel off:
+
+- **It runs last**, only on what the deterministic pass could not place, so most
+  calls never reach it.
+- **It is cached** by the shape of the flow, so an identical second call is free.
+- **It only ever adds findings**, so it can make a decision stricter and never
+  looser. A model outage cannot become a leak.
+- **It never sees the constitution and never picks an outcome.** It answers one
+  narrow question — what personal data is in this payload — and the rules decide
+  what happens. Keeping policy out of the prompt is what stops a prompt
+  injection in the payload from rewriting the user's privacy rules.
+
+Excerpts the model returns are checked against the payload before use. A model
+that invents a string would have us redact something that is not there, or
+mangle something that is.
+
+The `ask` function is any provider. The kernel deliberately does not know which,
+so a constitution enforced with Claude behaves the same as one enforced with
+GPT.
 
 ## Portability, which is the whole claim
 
