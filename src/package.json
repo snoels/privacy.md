@@ -1,7 +1,28 @@
 {
   "name": "privacy.md",
   "version": "0.1.0",
-  "description": "Pre-tool-call enforcement of a portable privacy policy for personal AI agents.",
+  "description": "A privacy boundary for personal AI agents, enforced before the data leaves your machine. AGENTS.md tells an agent how to work; privacy.md tells it what it may send.",
+  "keywords": [
+    "privacy",
+    "ai-agents",
+    "agent",
+    "llm",
+    "data-minimization",
+    "agent-security",
+    "claude-code",
+    "openai-agents",
+    "gdpr",
+    "mcp"
+  ],
+  "homepage": "https://github.com/snoels/privacy.md#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snoels/privacy.md.git"
+  },
+  "bugs": {
+    "url": "https://github.com/snoels/privacy.md/issues"
+  },
+  "license": "MIT",
   "type": "module",
   "bin": {
     "privacy.md": "./bin/cli.js"
@@ -9,13 +30,20 @@
   "exports": {
     ".": "./kernel/index.js"
   },
+  "files": [
+    "bin/",
+    "kernel/",
+    "adapters/",
+    "constitutions/",
+    "demo/",
+    "examples/"
+  ],
   "scripts": {
     "test": "node --import ./test/setup.js --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT",
   "dependencies": {
     "yaml": "^2.6.1"
   },

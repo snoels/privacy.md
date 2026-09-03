@@ -27,12 +27,12 @@ import { readLedger, summarize } from '../kernel/ledger.js';
 import { menuFor, pruneExpired } from '../kernel/rules.js';
 import { clearHold, listHolds, loadHold } from '../kernel/pending.js';
 import { escalate } from '../kernel/freetext.js';
-import { toMarkdown } from '../kernel/policy-doc.js';
 import { onboard, rehearse } from './onboard.js';
 import { scan, summarizeScan } from '../kernel/history.js';
 import { propose, repeatedDecisions, words } from '../kernel/infer.js';
 import { conform } from '../kernel/conformance.js';
 import { PRESETS, buildPreset } from '../kernel/questions.js';
+import { toMarkdown } from '../kernel/policy-doc.js';
 import { fieldDiff, panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -92,14 +92,75 @@ function install({ scope = 'project', dir = process.cwd() } = {}) {
 }
 
 /** Non-interactive fallback: used by `install`, and where there is no terminal. */
-function initConstitution({ preset = 'balanced', force = false } = {}) {
+function initConstitution({ preset = 'balanced', force = false, email, phone } = {}) {
   if (existsSync(CONSTITUTION_PATH) && !force) {
     return { path: CONSTITUTION_PATH, existed: true };
   }
-  const base = loadYaml(presetPath(preset));
+  const base = buildPreset(preset, {
+    identity: { ...(email ? { email } : {}), ...(phone ? { phone } : {}) },
+  });
   mkdirSync(CONSTITUTION_HOME, { recursive: true });
-  saveConstitution({ ...base, identity: base.identity ?? {} });
+  writeFileSync(POLICY_PATH, toMarkdown(base, { preset }), 'utf8');
+  saveConstitution(base);
   return { path: CONSTITUTION_PATH, existed: false };
+}
+
+/**
+ * Check the setup end to end, and say what is wrong in words.
+ *
+ * Everything here has one failure mode in common: it looks installed and
+ * quietly does nothing. A hook registered against a constitution that is not
+ * there, or an identity left empty so your own details read as somebody
+ * else's. Worth one command before you rely on it.
+ */
+function doctor({ dir = process.cwd() } = {}) {
+  const problems = [];
+  const ok = [];
+
+  if (existsSync(CONSTITUTION_PATH)) {
+    const constitution = loadConstitution();
+    ok.push(`${constitution.rules.length} rules at ${CONSTITUTION_PATH}`);
+    for (const warning of warnings(constitution)) problems.push([warning.says, warning.fix]);
+  } else {
+    problems.push([
+      'No constitution — the preset is standing in for one.',
+      'npx privacy-constitution init',
+    ]);
+  }
+
+  const settingsPath = join(dir, '.claude', 'settings.json');
+  const settings = readJson(settingsPath);
+  const registered = (settings.hooks?.PreToolUse ?? []).some((entry) =>
+    (entry.hooks ?? []).some((hook) => hook.command?.includes('privacy-constitution')),
+  );
+  if (registered) ok.push(`hook registered in ${settingsPath}`);
+  else problems.push([`No hook in ${settingsPath} — nothing is being checked here.`, `npx privacy-constitution install --dir ${dir}`]);
+
+  // The only check that matters: does a call carrying something personal
+  // actually get stopped?
+  const probe = check(
+    {
+      tool: 'WebFetch',
+      input: { url: 'https://a-service-you-have-never-used.example/x?email=someone@example.com' },
+    },
+    loadConstitution(),
+  );
+  if (probe.decision === 'allow') {
+    problems.push(['A test call carrying an email was allowed through.', 'npx privacy-constitution rules']);
+  } else {
+    ok.push(`a personal detail to an unknown service is ${probe.decision}`);
+  }
+
+  console.log();
+  for (const item of ok) console.log(`  ${green('ok')}  ${item}`);
+  for (const [says, fix] of problems) {
+    console.log(`  ${style.amber('!!')}  ${says}`);
+    console.log(`      ${dim(fix)}`);
+  }
+  console.log();
+  if (problems.length === 0) console.log(green('  Ready.'));
+  else process.exitCode = 1;
+  console.log();
 }
 
 /** The onboarding flow: preset, the contested questions, the review table. */
@@ -543,7 +604,12 @@ const value = (name, fallback) => {
 switch (command) {
   case 'init': {
     if (flag('preset') || !process.stdin.isTTY) {
-      const { path, existed } = initConstitution({ preset: value('preset', 'balanced'), force: flag('force') });
+      const { path, existed } = initConstitution({
+        preset: value('preset', 'balanced'),
+        force: flag('force'),
+        email: value('email'),
+        phone: value('phone'),
+      });
       console.log(existed ? dim(`Constitution already at ${path} (use --force to reset)`) : green(`Constitution written to ${path}`));
     } else {
       await runOnboarding({ force: flag('force') });
@@ -552,6 +618,9 @@ switch (command) {
   }
   case 'rules':
     showRules();
+    break;
+  case 'doctor':
+    doctor({ dir: value('dir', process.cwd()) });
     break;
   case 'try':
     tryOne();
@@ -603,7 +672,8 @@ switch (command) {
   ${bold('privacy.md')} -- pre-tool-call enforcement of your privacy rules
 
     demo      the whole thing, seven acts           ${dim('--auto unattended, --fast for rehearsal')}
-    init      set up your constitution              ${dim('--force to start over')}
+    init      set up your constitution              ${dim('--force  --email you@x  --preset balanced')}
+    doctor    check the setup actually works        ${dim('--dir <project>')}
     policy    your privacy policy, the file you can read
     rules     what your constitution says, in plain English
     try       one call, before and after

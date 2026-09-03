@@ -180,7 +180,7 @@ to sit, and `privacy.md report` states coverage rather than claiming totality.
 |---|---|
 | [BRIEF.md](BRIEF.md) | The full design: thesis, outcomes, rule taxonomy, evidence, open calls |
 | [SLIDES.md](SLIDES.md) | The pitch, four slides |
-| [src/README.md](src/README.md) | Architecture and build order |
+| [src/ARCHITECTURE.md](src/ARCHITECTURE.md) | Architecture and build order |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to edit the docs, and how a doc change becomes a build change |
 
 ## Contributing
