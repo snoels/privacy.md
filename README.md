@@ -48,6 +48,37 @@ Each `##` heading in [`docs/demo.md`](docs/demo.md) is roughly one slide.
 
 ---
 
+## How we work
+
+Two things move in parallel, and **issues are how they meet**.
+
+### If you're writing the document
+
+Edit `docs/` directly. Small fix, better wording, a fact you know is wrong — just
+make the edit, no permission needed.
+
+If it's worth discussing first, or it changes what we *build* rather than what we
+*say*, open an issue instead:
+**[New issue → Change the document](../../issues/new?template=doc-change.yml)**.
+
+### If you're implementing
+
+Work from the docs as they stand today. They are good enough to start.
+
+Doc changes land continuously and that's fine — **you are not expected to track
+them.** Anything that should change the implementation arrives as an issue
+labelled `implementation`, not as a silent edit. If you spot a doc change that
+does affect the build and no issue exists, open one:
+**[New issue → Build something](../../issues/new?template=build-task.yml)**.
+
+### The rule that keeps this from breaking
+
+> A change to the document is not a change to the plan until there's an issue.
+
+Edit freely. But if the build has to move, say so out loud in an issue.
+
+---
+
 ## How to edit the document
 
 **You do not need to code, install anything, or use a terminal.**

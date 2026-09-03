@@ -1,0 +1,37 @@
+name: Build something
+description: A piece of the PoC that needs implementing.
+title: "build: "
+labels: ["implementation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Build order and rationale live in [docs/build.md](../blob/main/docs/build.md).
+        Keep tasks small enough that one person finishes one in a sitting.
+  - type: textarea
+    id: what
+    attributes:
+      label: What to build
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How we know it works. A demo step, a passing check, a visible outcome.
+    validations:
+      required: true
+  - type: input
+    id: from_doc
+    attributes:
+      label: Which part of the document this comes from
+      description: "e.g. docs/demo.md, the 1:00–2:00 act"
+  - type: dropdown
+    id: blocking
+    attributes:
+      label: Is the demo blocked without it?
+      options:
+        - "Yes — the demo does not work without this"
+        - "No — it makes the demo better"
+    validations:
+      required: true
