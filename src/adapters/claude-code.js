@@ -88,7 +88,7 @@ async function main() {
           '',
           describe(result),
           '',
-          'Retry without the blocked fields, or run `npx privacy.md rules` to change the rule.',
+          'Retry without the blocked fields, or run `npx privacy-constitution rules` to change the rule.',
         ].join('\n'),
       }),
     );
@@ -124,7 +124,7 @@ async function main() {
             ].join('\n');
           }),
           '',
-          `Then run: npx privacy.md decide ${id} <number>`,
+          `Then run: npx privacy-constitution decide ${id} <number>`,
           'That records the choice and writes the rule. Retry this call afterwards.',
         ].join('\n'),
       }),

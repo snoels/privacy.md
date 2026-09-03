@@ -145,8 +145,8 @@ async function runOnboarding({ force = false } = {}) {
   for (const line of rehearse(constitution)) console.log(`    ${line}`);
 
   console.log();
-  console.log(dim('  Next: npx privacy.md install    (registers the hook in this project)'));
-  console.log(dim('        npx privacy.md try        (one call, before and after)'));
+  console.log(dim('  Next: npx privacy-constitution install    (registers the hook in this project)'));
+  console.log(dim('        npx privacy-constitution try        (one call, before and after)'));
   console.log();
 }
 
@@ -360,7 +360,7 @@ function holds() {
     for (const [index, option] of menuFor(hold).entries()) {
       console.log(`     ${index + 1}. ${option.label}  ${dim(option.consequence)}`);
     }
-    console.log(dim(`     npx privacy.md decide ${hold.id} <number>`));
+    console.log(dim(`     npx privacy-constitution decide ${hold.id} <number>`));
   }
 }
 

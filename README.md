@@ -42,7 +42,7 @@ privacy.md demo       # the whole thing, seven acts
 ```
 
 Without `npm link`, every command below is `node bin/cli.js <command>` from
-`src/`. Once the package is published, it is `npx privacy.md <command>` with no
+`src/`. Once the package is published, it is `npx privacy-constitution <command>` with no
 clone at all.
 
 Nothing leaves your machine, and there is no account.

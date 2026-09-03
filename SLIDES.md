@@ -278,13 +278,13 @@ the agent asks you in the conversation you are already in:
      that need it will fail
      writes the rule: Your contact details never reach clinic.example.
 
-  Then run: npx privacy.md decide 7f3a91 2
+  Then run: npx privacy-constitution decide 7f3a91 2
 ```
 
 You answer in the conversation. The command records it:
 
 ```
-  $ npx privacy.md decide 7f3a91 2
+  $ npx privacy-constitution decide 7f3a91 2
 
     Send a masked value -- the call still works, clinic.example gets a
                            relay rather than the real thing
