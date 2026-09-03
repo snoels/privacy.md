@@ -13,6 +13,11 @@ import { loadConstitution, presetPath, loadYaml } from '../kernel/constitution.j
 import { detect } from '../kernel/detect.js';
 import { classifyRecipient } from '../kernel/recipients.js';
 import { summarize } from '../kernel/ledger.js';
+import { menuFor, pruneExpired, HOUR_MS } from '../kernel/rules.js';
+import { saveConstitution } from '../kernel/constitution.js';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { rmSync } from 'node:fs';
 
 const constitution = {
   ...loadYaml(presetPath('balanced')),
@@ -64,11 +69,13 @@ test('a call with nothing left after redaction is escalated instead', () => {
 });
 
 test('a partial match rewrites the string instead of dropping the field', () => {
+  // A service the user already uses, so this exercises redaction rather than
+  // the unknown-recipient hold.
   const result = run('Bash', {
-    command: 'curl -X POST https://unknown-crm.io/leads -d email=jane.doe@acme.com -d src=web',
+    command: 'curl -X POST https://slack.com/api/x -d email=jane.doe@acme.com -d src=web',
   });
   assert.equal(result.decision, 'redact');
-  assert.match(result.input.command, /^curl -X POST https:\/\/unknown-crm\.io\/leads/);
+  assert.match(result.input.command, /^curl -X POST https:\/\/slack\.com\/api\/x/);
   assert.match(result.input.command, /-d src=web$/);
   assert.doesNotMatch(result.input.command, /jane\.doe@acme\.com/);
 });
@@ -135,4 +142,50 @@ test('the ledger produces the minimization ratio the pitch quotes', () => {
   assert.equal(summary.withheld, 3);
   assert.equal(summary.minimizationRatio, 0.5);
   assert.equal(summary.interruptions, 1);
+});
+
+test('a choice from the hold menu becomes a rule that wins on retry', () => {
+  // The loop the whole product turns on: a call is held, the user picks an
+  // option, that writes a rule, and the same call is no longer held.
+  const call = {
+    tool: 'WebFetch',
+    input: { url: 'https://unknown-crm.io/leads', email: 'jane.doe@acme.com' },
+  };
+
+  const held = check(call, constitution);
+  assert.equal(held.decision, 'ask', 'an unknown recipient should be held');
+
+  const options = menuFor({ ...held, tool: call.tool });
+  const chosen = options.find((option) => option.key === 'redact');
+  const written = chosen.rule();
+
+  const after = check(call, { ...constitution, rules: [...constitution.rules, written] });
+  assert.equal(after.decision, 'redact', 'the new rule should beat the ask rule');
+  assert.equal(after.input.email, undefined);
+  assert.equal(after.input.url, call.input.url, 'the call must still be usable');
+});
+
+test('a temporary grant stops applying once its hour is up', () => {
+  const call = { tool: 'WebFetch', input: { url: 'https://unknown-crm.io/x', email: 'jane@acme.com' } };
+  const grant = menuFor({ ...check(call, constitution), tool: call.tool })
+    .find((option) => option.key === 'hour')
+    .rule();
+
+  assert.ok(grant.expires, 'an hour-long grant must carry an expiry');
+
+  const withGrant = { ...constitution, rules: [...constitution.rules, grant] };
+  assert.equal(check(call, withGrant).decision, 'allow', 'the grant should apply now');
+
+  const { constitution: later, expired } = pruneExpired(withGrant, Date.now() + HOUR_MS + 1000);
+  assert.equal(expired.length, 1, 'the summary needs to be able to report the expiry');
+  assert.equal(check(call, later).decision, 'ask', 'and the hold should come back');
+});
+
+test('runtime bookkeeping never leaks into the saved policy', () => {
+  const path = join(tmpdir(), `constitution-${Date.now()}.yaml`);
+  saveConstitution({ ...loadConstitution({ path: '/nonexistent' }), rules: [] }, path);
+  const written = loadYaml(path);
+  assert.equal(written.source, undefined);
+  assert.equal(written.isFallback, undefined);
+  rmSync(path, { force: true });
 });

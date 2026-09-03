@@ -22,6 +22,8 @@ import {
   saveConstitution,
 } from '../kernel/constitution.js';
 import { readLedger, summarize } from '../kernel/ledger.js';
+import { menuFor, pruneExpired } from '../kernel/rules.js';
+import { clearHold, listHolds, loadHold } from '../kernel/pending.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
@@ -125,6 +127,69 @@ function report() {
   console.log();
 }
 
+/**
+ * Apply a choice from a hold menu.
+ *
+ * This is where the constitution actually grows. The rule is echoed back before
+ * it is saved, because a privacy rule the user did not understand is worse than
+ * no rule at all.
+ */
+function decide(id, choice) {
+  const hold = loadHold(id);
+  if (!hold) {
+    console.log(dim(`No held call with id ${id}. It may have expired, or already been decided.`));
+    const open = listHolds();
+    if (open.length > 0) console.log(dim(`Open holds: ${open.map((h) => h.id).join(', ')}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const options = menuFor(hold);
+  const index = Number.parseInt(choice, 10) - 1;
+  const option = Number.isInteger(index) ? options[index] : options.find((o) => o.key === choice);
+
+  if (!option) {
+    console.log(dim(`Pick one of 1-${options.length}, or a name: ${options.map((o) => o.key).join(', ')}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const rule = option.rule();
+  console.log();
+  console.log(`  ${bold(option.label)} -- ${option.consequence}`);
+
+  if (rule) {
+    const current = pruneExpired(loadConstitution()).constitution;
+    const rules = current.rules.filter((existing) => existing.id !== rule.id);
+    saveConstitution({ ...current, rules: [...rules, rule] });
+    console.log(green(`  rule added: ${rule.says}`));
+    if (rule.expires) console.log(dim(`  expires ${new Date(rule.expires).toLocaleTimeString()}`));
+    console.log(dim(`  ${CONSTITUTION_PATH}`));
+  } else {
+    console.log(dim('  nothing recorded -- this call only'));
+  }
+
+  clearHold(id);
+  console.log();
+  console.log(dim('  Retry the call. The constitution now covers it.'));
+  console.log();
+}
+
+function holds() {
+  const open = listHolds();
+  if (open.length === 0) {
+    console.log(dim('Nothing held.'));
+    return;
+  }
+  for (const hold of open) {
+    console.log(`  ${bold(hold.id)}  ${hold.tool} -> ${hold.recipient.name}`);
+    for (const [index, option] of menuFor(hold).entries()) {
+      console.log(`     ${index + 1}. ${option.label}  ${dim(option.consequence)}`);
+    }
+    console.log(dim(`     npx privacy-constitution decide ${hold.id} <number>`));
+  }
+}
+
 async function checkStdin() {
   const raw = await new Promise((resolveInput) => {
     let buffer = '';
@@ -172,6 +237,12 @@ switch (command) {
     console.log(dim(`Constitution: ${CONSTITUTION_PATH}`));
     break;
   }
+  case 'decide':
+    decide(args[0], args[1]);
+    break;
+  case 'holds':
+    holds();
+    break;
   case 'check':
     await checkStdin();
     break;
@@ -184,6 +255,8 @@ switch (command) {
 
     init      write a constitution from a preset   ${dim('--preset balanced --force')}
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}
+    holds     calls waiting on a decision, with the menu for each
+    decide    answer a held call                   ${dim('<hold-id> <number>')}
     check     evaluate one call read from stdin
     report    what was withheld, and how often you were interrupted
 `);

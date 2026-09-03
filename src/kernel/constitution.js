@@ -52,9 +52,14 @@ export function mergeLayers(...layers) {
   return { version: 1, identity, rules: [...byId.values()] };
 }
 
+/** Runtime bookkeeping that `loadConstitution` adds; never part of the policy. */
+const RUNTIME_KEYS = ['source', 'isFallback'];
+
 export function saveConstitution(constitution, path = CONSTITUTION_PATH) {
+  const policy = { ...constitution };
+  for (const key of RUNTIME_KEYS) delete policy[key];
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, YAML.stringify(constitution), 'utf8');
+  writeFileSync(path, YAML.stringify(policy), 'utf8');
   return path;
 }
 

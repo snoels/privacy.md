@@ -34,19 +34,32 @@ One scenario runs through slides 2, 3 and 4. Breadth reads as unfinished.
 
 A report generated from real agent history, mine, from last month.
 
+This is `privacy-constitution report`, which already exists and prints this
+shape from the ledger:
+
 ```
-  340   tool calls
-   61   carried personal data off this machine
+  What your agent sent, and what it did not
 
-        home address    → 4 services
-        phone number    → 6 services
-        health detail   → 2 services
-        credentials     → 1 service
+  calls checked        340
+  fields available     412
+  fields sent          351
+  withheld              61   (15% minimized)
+  interruptions          0
 
-  0     of these were shown to me before they went
+  Rules that fired
+     18  health details only go to a healthcare provider
+     11  other people's contact details are stripped
+      4  keys and secrets never leave this machine
+
+  Who your agent talked to
+     73  Google Calendar
+     41  Gmail
+     12  bpost
 ```
 
-Then the kernel redacts its own report, live, while it is on screen.
+Then the kernel redacts its own report, live, while it is on screen. "Who your
+agent talked to" is the panel that surprises people, so it stays on screen
+longest.
 
 ### Said out loud
 
@@ -65,11 +78,18 @@ shows minimization before we have explained it.
 
 ### Notes
 
-No live model call here. This is generated ahead of time and replayed.
+No live model call here. Generated ahead of time and replayed.
+
+**The one real dependency on this slide.** `report` reads the ledger, and the
+ledger only has entries once the hook has been running. So a retrospective over
+"last month" cannot come from it. Either the hook runs in observe-only for long
+enough to fill the ledger, or something makes one pass over the agent
+transcripts already on disk. Neither exists as a command today, and this slide
+does not work without one of them.
 
 The honest version of this slide is the strongest one, so the numbers have to be
 my real numbers. If a field is too exposing to show, the kernel redacting it on
-screen is the point, not a problem.
+screen is the point rather than a problem.
 
 ---
 
@@ -141,6 +161,11 @@ is the thing this project argues against.
 
 ### Notes
 
+`asTemplate()` in `kernel/constitution.js` already does the export: it drops
+every rule whose provenance is personal and keeps the rest. That is a free beat
+if we want it, and it is the tool performing on its own output the same
+minimization it performs on every tool call.
+
 The strongest beat available here is the free-text one. Type "never tell anyone
 I am pregnant", show the compiled rule before it saves, then run it against two
 past flows and show what would have happened. It only earns the time if it is
@@ -189,22 +214,55 @@ wants to write to the shared work calendar and mail the clinic.
            the event was still created
 ```
 
-One call escalates, and the hold is where the constitution actually gets built:
+One call escalates. The hold does not draw a menu, because the hook runs as a
+subprocess with no terminal of its own. It hands the menu back to the agent, and
+the agent asks you in the conversation you are already in:
 
 ```
-  HELD   clinic.book wants phone
-         recipient: clinic.example . you have never used this
-                    the agent found this, you did not pick it
-         rule hit:  anything personal going to a service you have
-                    never used needs a decision
+  Held by your privacy constitution before this reaches clinic.example.
+  You did not pick this destination, the agent did.
 
-    > Substitute a relay number  booking succeeds, they get a mask
-      Redact and send            booking may fail without a callback number
-      Allow for this recipient   clinic.example, any future call
-      Never                      writes a deny rule
+    · anything personal going to a service you have never used
+      needs a decision
 
-    writes rule -> substitute phone for healthcare recipients
+  1. Redact and send
+     the call still works, clinic.example gets no contact details
+     writes the rule: Your contact details are stripped before
+                      anything reaches clinic.example.
+  2. Send a masked value
+     the call still works, clinic.example gets a relay rather than
+     the real thing
+     writes the rule: Your contact details reach clinic.example
+                      only as a mask.
+  3. Allow once
+     this call only, nothing is remembered
+     nothing is remembered
+  ...
+  7. Never
+     your contact details will never reach clinic.example; calls
+     that need it will fail
+     writes the rule: Your contact details never reach clinic.example.
+
+  Then run: npx privacy-constitution decide 7f3a91 2
 ```
+
+You answer in the conversation. The command records it:
+
+```
+  $ npx privacy-constitution decide 7f3a91 2
+
+    Send a masked value -- the call still works, clinic.example gets a
+                           relay rather than the real thing
+    rule added: Your contact details reach clinic.example only as a mask.
+    ~/.constitution/constitution.yaml
+
+    Retry the call. The constitution now covers it.
+```
+
+Every option carries the rule it would write, all of them at once. There is no
+cursor to hover, so the width of a grant has to be visible on the line itself.
+"Allow for healthcare services" and "Allow for clinic.example" look almost
+identical until you can read the two rules side by side.
 
 ### Said out loud
 
@@ -220,11 +278,20 @@ instruction, and the kernel does not care who asked, only where the data is
 going.
 
 One decision needed me, and it needed me because the agent picked that
-recipient rather than I did. I answered once, and the answer became a rule. The
-booking completed.
+recipient rather than I did. Notice where it asked. Not in a popup and not in a
+terminal, but in the conversation I was already having, because the hook has no
+screen of its own and does not need one. I picked the mask. That wrote a rule to
+my constitution, and the booking completed.
+
+It will not ask me again.
 
 Block is the rare outcome. The default is redact, and the task completes with
 less of you in it.
+
+And when redaction would strip the call down to nothing, the kernel does not
+send an empty request and call that a privacy win. It escalates to you instead,
+because a broken call dressed up as policy is how you lose the user in week
+one.
 
 ### What it proves
 
@@ -236,8 +303,10 @@ job, which is the thing that kills every privacy tool that only blocks.
 
 This is the act that cannot be cut. Everything else can shrink.
 
-Give the hold menu real seconds. The rule preview updating as the cursor moves
-is the whole product, and it is invisible if we rush past it.
+Give the hold real seconds. Seven options with their rules is a lot of text on
+screen, and the temptation is to cut it down. Do not. Reading two grants side by
+side and seeing that one of them is four times wider is the moment the word
+"constitution" earns itself.
 
 The colleague's phone number is the third-party subject beat. It is one
 sentence, and few teams will touch it.
@@ -284,6 +353,11 @@ Same constitution file, dropped into an agent built on a different stack, by
 different people, in different code. Same enforcement. The policy is yours, and
 it outlives whichever agent you happen to be using.
 
+Two things port, not one. The rules port, and so does the interaction. The hold
+never assumed a screen. It hands the agent a numbered list and takes the answer
+back as a command, so it works in anything that can run one. We did not build a
+privacy UI, which is why there is no privacy UI to port.
+
 Then the number. 24 scripted probes designed to tempt a leak, run against both
 agents. Unprotected leaked on 17. With the kernel, 2. On the live task, 14
 fields were available to send and 3 went out, and both runs completed.
@@ -311,6 +385,11 @@ suite is the part that outlasts the hackathon.
 If we run long, portability shrinks to holding up the file and saying one
 sentence. The number stays.
 
+The two halves of that number are not equally far away. The minimization ratio
+is already computed: `report` prints fields available against fields sent, off
+the ledger, today. The conformance score has nothing behind it, and it is the
+half the slide leans on hardest. If only one gets built, build the probes.
+
 ---
 
 ## Numbers that are not measured yet
@@ -318,27 +397,63 @@ sentence. The number stays.
 Every figure on these slides is currently a placeholder from the brief. None of
 them go on a slide until a run produced them.
 
-| Slide | Figure | Where it has to come from |
-|---|---|---|
-| 1 | 340 calls, 61 carrying personal data, the per-field fan-out | A real pass over my own agent transcripts |
-| 3 | Nothing numeric | |
-| 4 | 17 leaks unprotected, 2 with the kernel | The 24-probe conformance suite, run twice |
-| 4 | 14 fields available, 3 sent | The ledger's minimization ratio on the demo task |
+| Slide | Figure | Where it comes from | Exists? |
+|---|---|---|---|
+| 1 | Calls checked, fields withheld, rules fired, top recipients | `privacy-constitution report`, over a ledger with real history in it | Command yes, the history no |
+| 3 | Nothing numeric | | |
+| 4 | Leaks unprotected against leaks with the kernel | The 24-probe conformance suite, run twice | No |
+| 4 | Fields available against fields sent | `report`, on the demo task | Yes |
 
 The evidence in [Evidence for the opening](BRIEF.md#evidence-for-the-opening)
 has the same problem. Those incidents are recalled from memory and each date and
 CVE needs checking against a primary source before it is projected.
 
-## What the slides currently claim that the build does not do yet
+## What the slides claim, against what the build does
 
-Worth tracking, because a slide that outruns the kernel is how a demo dies.
+Checked against `main` at `0767e96` plus the uncommitted work in the tree
+(`kernel/pending.js`, and changes to the adapter, the CLI and
+`kernel/constitution.js`). All 24 tests pass.
 
-- **Redaction inside composite calls.** A health detail inside a
-  `curl -d '{...}'` payload survives the kernel today. Two tests in
-  `src/test/composite.test.js` fail on exactly this. Slide 3 shows a structured
-  tool call, which works, so the slide is safe as written. A judge typing a
-  shell command is not.
-- **The hold menu.** Slide 3 shows the graded menu and a rule being written
-  back. That is item 4 in the build order and does not exist yet.
-- **The OpenAI adapter.** Slide 4's right-hand column is item 7.
-- **The conformance suite.** Slide 4's closing number is item 8.
+### Backed by code
+
+- **Detection and redaction, including inside composite calls.** A health detail
+  in a `curl -d '{...}'` payload gets stripped rather than sailing through. Slide
+  3 is safe as written, and so is a judge typing a shell command.
+- **The whole hold loop.** The adapter emits the menu, `kernel/pending.js` parks
+  the call in `~/.constitution/pending/`, and `decide <id> <n>` writes the rule
+  through `saveConstitution`. Slide 3's "it will not ask me again" is true.
+- **Every line of menu text on slide 3.** Labels, consequences and the rule
+  previews are generated by `kernel/rules.js`, not mocked up for the slide.
+- **Temporary grants.** Rules carry `expires`, and `decide` runs `pruneExpired`
+  before it writes, so an hour-long grant is swept on the next decision.
+- **The report.** `privacy-constitution report` prints calls checked, fields
+  available against fields sent, interruptions, rules that fired and top
+  recipients. Slides 1 and 4 both read off it.
+- **Template export.** `asTemplate()` drops everything personal and keeps the
+  rest.
+
+### Not yet true
+
+- **The OpenAI adapter.** `src/adapters/` holds `claude-code.js` and nothing
+  else. Slide 4's right-hand column is item 7 in the build order, and it is now
+  the single largest gap on any slide.
+- **The conformance suite.** No probes anywhere in `src/`. Slide 4's closing
+  number has nothing behind it.
+- **Slide 1's history.** `report` reads the ledger, and the ledger only fills
+  once the hook has been running. A retrospective over last month cannot come
+  from it. Either the hook runs in observe-only for long enough, or something
+  makes one pass over the transcripts already on disk.
+- **Slide 2's accept-edit-skip screen.** There is no `init` flow that proposes
+  inferred rules. `init` writes a preset and stops.
+
+### Two things to fix before either reaches a projector
+
+- **A grammar bug in the emitted menu.** `DATA_WORDS` in `kernel/rules.js` holds
+  possessives (`contact: 'your contact details'`), and the redact consequence
+  reads `` `${where} gets no ${subject}` ``. Together they print "clinic.example
+  gets no your contact details". Slide 3 shows the corrected wording. The fix is
+  either non-possessive data words plus a possessive added where it reads well,
+  or a separate short form for mid-sentence use.
+- **An em-dash in product copy.** The adapter emits "You did not pick this
+  destination — the agent did." That goes on screen, and it is against house
+  style. Slide 3 shows it with a comma.

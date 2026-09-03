@@ -60,7 +60,10 @@ rules:
 
   - id: ask-before-unknown-recipients
     says: "Anything personal going to a service you have never used needs a decision."
-    data: [contact, location, identity, financial, health]
+    # third_party_contact belongs here more than anything else does: data about
+    # someone who never agreed to any of this, going somewhere the user did not
+    # choose, is the case least safe to decide on their behalf.
+    data: [contact, third_party_contact, location, identity, financial, health]
     recipient: { trust: [agent_chosen] }
     outcome: ask
     provenance: { source: preset, from: balanced }

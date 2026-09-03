@@ -53,8 +53,36 @@ What actually reached the server:
 ```
 
 The request succeeded, the agent reported success, and neither the health detail
-nor the third party's email ever left the machine. That is build items 1–3 —
+nor the third party's email ever left the machine. That is build items 1-3 —
 interception, the outcome model end to end, and the minimization ratio.
+
+Item 4 was proven the same way: a held call reached the user as a seven-option
+menu inside the session, `decide` wrote the rule, and the retry was no longer
+held.
+
+## The hold loop stays inside the agent
+
+A `PreToolUse` hook has no terminal of its own — stdin carries the tool call and
+`/dev/tty` fails with `ENXIO`. So it cannot draw a menu. It does not need to:
+the agent is already a conversation with the user.
+
+```
+  agent proposes a call
+        │
+  kernel holds it, and hands the agent the menu
+        │
+  agent shows the options and asks           ← inline, in the session
+        │
+  npx privacy-constitution decide <id> <n>   ← writes the rule
+        │
+  agent retries; the constitution now covers it
+```
+
+Every option carries the rule it would write, so the user sees how wide the
+grant is before taking it. Nothing here assumes a particular UI, which is why
+the same loop works in Codex or anything else that can run a command.
+
+`npx . holds` lists anything waiting, if the agent loses the thread.
 
 ## Design notes worth knowing
 
@@ -81,5 +109,5 @@ redacting an event's `start` breaks the task while looking like the kernel worke
 
 ## Next
 
-Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Next up: the hold menu
-with the live rule preview (item 4), then onboarding (item 5).
+Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-4 are done.
+Next: onboarding (item 5) — the preset, the review table, and free-text rules.

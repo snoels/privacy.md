@@ -20,6 +20,8 @@ import { check } from '../kernel/index.js';
 import { loadConstitution } from '../kernel/constitution.js';
 import { record } from '../kernel/ledger.js';
 import { OUTCOMES } from '../kernel/evaluate.js';
+import { menuFor } from '../kernel/rules.js';
+import { saveHold } from '../kernel/pending.js';
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -94,15 +96,36 @@ async function main() {
   }
 
   if (result.decision === OUTCOMES.ASK) {
+    // The hook has no terminal, so the menu goes back through the agent and the
+    // answer arrives as a command. The options carry the rule each one would
+    // write, so the user can see how wide a grant is before taking it.
+    const held = { ...result, tool: call.tool, sessionId: event.session_id };
+    const options = menuFor(held, { canRedact: result.escalated !== 'redaction-would-empty-the-call' });
+    const id = saveHold({ tool: call.tool, input: call.input, recipient: result.recipient, results: result.results });
+
     emit(
       decisionOutput('ask', {
         permissionDecisionReason: [
-          `Your privacy constitution wants a decision before this reaches ${result.recipient.name}.`,
-          `Recipient is ${result.recipient.trust.replace('_', ' ')}${
-            result.recipient.chosenBy === 'agent' ? ', and the agent chose it rather than you' : ''
-          }.`,
+          `Held by your privacy constitution before this reaches ${result.recipient.name}.`,
+          result.recipient.chosenBy === 'agent'
+            ? 'You did not pick this destination — the agent did.'
+            : `Recipient is ${result.recipient.trust.replace(/_/g, ' ')}.`,
           '',
-          result.reasons.map((r) => `  · ${r}`).join('\n'),
+          ...result.reasons.map((reason) => `  · ${reason}`),
+          '',
+          'Show the user these options verbatim and ask which they want. Do not choose for them.',
+          '',
+          ...options.map((option, index) => {
+            const rule = option.rule();
+            return [
+              `  ${index + 1}. ${option.label}`,
+              `     ${option.consequence}`,
+              rule ? `     writes the rule: ${rule.says}` : '     nothing is remembered',
+            ].join('\n');
+          }),
+          '',
+          `Then run: npx privacy-constitution decide ${id} <number>`,
+          'That records the choice and writes the rule. Retry this call afterwards.',
         ].join('\n'),
       }),
     );
