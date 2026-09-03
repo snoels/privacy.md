@@ -236,6 +236,48 @@ export async function text({ title, hint, placeholder = '' }) {
   return value;
 }
 
+/** Struck through, for a value that did not make it out. */
+export const struck = (text) => `${ESC}9m${ESC}2m${text}${ESC}22m${ESC}29m`;
+
+/**
+ * A field-by-field view of what a service actually received.
+ *
+ * The whole argument of this project is that the task still completes carrying
+ * less, and a truncated JSON blob shows neither half of that. Every field is
+ * listed, and the ones that were withheld are struck through where they stood.
+ *
+ * @param {object} proposed what the agent wanted to send
+ * @param {object|null} sent what arrived, or null if the call never happened
+ * @param {number} width columns for the value before it is trimmed
+ */
+export function fieldDiff(proposed, sent, width = 72) {
+  const lines = [];
+  const trim = (value) => {
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    return text.length > width ? `${text.slice(0, width - 1)}…` : text;
+  };
+
+  for (const [key, before] of Object.entries(proposed ?? {})) {
+    if (before === null || before === undefined) continue;
+    const after = sent?.[key];
+    const label = style.dim(key.padEnd(10));
+
+    if (sent === null) {
+      lines.push(`${label} ${struck(trim(before))}`);
+    } else if (after === undefined) {
+      lines.push(`${label} ${struck(trim(before))}  ${style.red('removed')}`);
+    } else if (after !== before) {
+      // Both halves, because the removal is the thing worth seeing. One line
+      // showing only the result asks the reader to guess what used to be there.
+      lines.push(`${label} ${struck(trim(before))}`);
+      lines.push(`${' '.repeat(10)} ${style.violet(trim(after))}  ${style.violet('sent instead')}`);
+    } else {
+      lines.push(`${label} ${trim(after)}`);
+    }
+  }
+  return lines;
+}
+
 /** A framed block, for anything that needs to read as one object. */
 export function panel(title, lines, colour = style.grey) {
   const inner = Math.max(width(title) + 2, ...lines.map(width)) + 2;

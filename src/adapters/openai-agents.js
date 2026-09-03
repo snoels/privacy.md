@@ -85,6 +85,8 @@ function explain(result, { held } = {}) {
  *   `recipient` declares what the tool actually talks to. The SDK has no notion
  *   of this — a function called `send_email` could reach anything — so
  *   declaring it is how a rule about "healthcare services" finds its target.
+ *   `onDecision` receives every verdict, for a UI that wants to show what was
+ *   withheld rather than only what got through.
  */
 export function guard(tool, options = {}) {
   const original = tool.invoke.bind(tool);
@@ -104,6 +106,7 @@ export function guard(tool, options = {}) {
       }
 
       const result = check({ tool: tool.name, input: parsed, recipient: options.recipient }, constitution);
+      options.onDecision?.({ tool: tool.name, proposed: parsed, ...result });
 
       record({
         tool: tool.name,
@@ -136,8 +139,8 @@ export function guard(tool, options = {}) {
  * `recipients` maps tool name to what it talks to, so rules written about
  * sectors ("health details only go to healthcare services") land correctly.
  */
-export function guardAll(tools, { recipients = {}, constitution } = {}) {
-  return tools.map((tool) => guard(tool, { recipient: recipients[tool.name], constitution }));
+export function guardAll(tools, { recipients = {}, constitution, onDecision } = {}) {
+  return tools.map((tool) => guard(tool, { recipient: recipients[tool.name], constitution, onDecision }));
 }
 
 /**

@@ -102,15 +102,20 @@ function instrumentedTools(wire) {
  *
  * @param {{constitution?: object}} options omit the constitution to see what an
  *        unprotected agent does.
- * @returns {Promise<{wire: Array, held: Array}>} what reached each service, and
- *          what never got there.
+ * @returns {Promise<{wire: Array, held: Array, decisions: Array}>} what reached
+ *          each service, what never got there, and why.
  */
 export async function triage({ constitution } = {}) {
   const wire = [];
+  const decisions = [];
   const raw = instrumentedTools(wire);
 
   const tools = constitution
-    ? guardAll(raw, { recipients: RECIPIENTS, constitution })
+    ? guardAll(raw, {
+        recipients: RECIPIENTS,
+        constitution,
+        onDecision: (decision) => decisions.push(decision),
+      })
     : raw;
 
   const agent = new Agent({
@@ -131,7 +136,7 @@ export async function triage({ constitution } = {}) {
     recipient: RECIPIENTS[call.tool]?.name ?? call.tool,
   }));
 
-  return { wire, held, history: result.history };
+  return { wire, held, decisions, history: result.history };
 }
 
 /**

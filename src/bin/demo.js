@@ -24,7 +24,7 @@ import { propose } from '../kernel/infer.js';
 import { guard } from '../adapters/openai-agents.js';
 import { triage, exposure } from '../demo/scenario.js';
 import { INBOX } from '../demo/inbox.js';
-import { panel, style } from './ui.js';
+import { fieldDiff, panel, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
@@ -136,8 +136,17 @@ async function actShock() {
       await wait(BEAT / 3);
     }
   }
+  if (summary.byRecipient.length > 0) {
+    line();
+    line(`    ${style.dim('who received the most')}`);
+    for (const [name, count] of summary.byRecipient.slice(0, 5)) {
+      line(`      ${String(count).padStart(4)}  ${name}`);
+      await wait(BEAT / 4);
+    }
+  }
   line();
   line(`    ${style.dim('Nobody has ever looked at this. It has been sitting there the whole time.')}`);
+  line(`    ${style.grey('Test fixtures are excluded; --include-fixtures counts them too.')}`);
   return summary;
 }
 
@@ -161,11 +170,24 @@ async function actRules(summary) {
   line(`    ${style.dim(`The constitution for this demo: ${constitution.rules.length} rules, all in plain English.`)}`);
   await wait(BEAT);
   line();
-  for (const rule of constitution.rules.slice(0, 4)) {
+  // Named rather than sliced: the first four by construction order are the
+  // generic per-data-type ones, and they read as boilerplate. These are the
+  // ones that make the argument.
+  const headline = [
+    'no-credentials-anywhere',
+    'health-only-to-healthcare',
+    'strip-other-peoples-contacts',
+    'nothing-personal-to-adtech',
+  ];
+  const shown = headline
+    .map((id) => constitution.rules.find((rule) => rule.id === id))
+    .filter(Boolean);
+
+  for (const rule of shown) {
     line(`      ${paint[rule.outcome](rule.outcome.padEnd(11))} ${rule.says}`);
     await wait(BEAT / 3);
   }
-  line(`      ${style.dim(`… and ${constitution.rules.length - 4} more`)}`);
+  line(`      ${style.dim(`… and ${constitution.rules.length - shown.length} more, all in this shape`)}`);
 }
 
 // ── Act 2 ────────────────────────────────────────────────────────────────
@@ -181,16 +203,18 @@ async function actProof() {
   await wait(BEAT * 2);
 
   const before = await triage();
-  line(`    ${style.red('WITHOUT')}  the agent triages your inbox`);
+  line(`    ${style.red('WITHOUT')}  four calls go out, all of them in full`);
   line();
   for (const entry of before.wire) {
-    line(`      → ${entry.recipient.padEnd(22)} ${style.dim(JSON.stringify(entry.sent).slice(0, 68))}`);
+    line(`      → ${style.bold(entry.recipient)}`);
+    for (const row of fieldDiff(entry.sent, entry.sent)) line(`          ${row}`);
+    line();
     await wait(BEAT / 2);
   }
+
   const leakedBefore = exposure(before.wire);
-  line();
   line(`      ${style.red(`${leakedBefore.length} things reached someone not entitled to them`)}`);
-  for (const item of leakedBefore.slice(0, 4)) {
+  for (const item of leakedBefore) {
     line(`        ${style.dim(`${item.label} → ${item.recipient}`)}`);
   }
   await wait(BEAT * 2);
@@ -199,27 +223,44 @@ async function actProof() {
   const after = await triage({ constitution });
   line(`    ${style.green('WITH')}     the same agent, the same inbox`);
   line();
+
+  const byTool = new Map(after.decisions.map((decision) => [decision.tool, decision]));
+
   for (const entry of after.wire) {
-    line(`      → ${entry.recipient.padEnd(22)} ${style.dim(JSON.stringify(entry.sent).slice(0, 68))}`);
-    await wait(BEAT / 2);
+    const decision = byTool.get(entry.tool);
+    line(`      → ${style.bold(entry.recipient)}`);
+    for (const row of fieldDiff(decision?.proposed ?? entry.sent, entry.sent)) line(`          ${row}`);
+    line();
+    await wait(BEAT);
   }
+
   for (const held of after.held) {
-    const note = held.injected ? style.red('  ← this was the newsletter talking, not you') : '';
-    line(`      ${style.red('✕')} ${held.recipient.padEnd(22)} ${style.dim('never called')}${note}`);
-    await wait(BEAT / 2);
+    const decision = byTool.get(held.tool);
+    line(`      ${style.red('✕')} ${style.bold(held.recipient)}   ${style.red('blocked, never called')}`);
+    for (const row of fieldDiff(decision?.proposed ?? {}, null)) line(`          ${row}`);
+    if (held.injected) line(`          ${style.red('this was the newsletter talking, not you')}`);
+    line();
+    await wait(BEAT);
   }
 
   const leakedAfter = exposure(after.wire);
-  line();
   line(`      ${style.green(`${leakedAfter.length} things reached someone not entitled to them`)}`);
-  line(`      ${style.dim('and every task the agent set out to do still completed.')}`);
+  line(
+    `      ${style.green(`${after.wire.length} of the ${after.wire.length + after.held.length} calls completed`)}` +
+      `${style.dim(' — the one that did not was the injection')}`,
+  );
   await wait(BEAT);
 
   line();
   line(`    ${style.dim('The clinic still knows why you are coming in. The shared calendar does not.')}`);
   line(`    ${style.dim('That is the whole idea: appropriate depends on who is receiving it.')}`);
 
-  return { before: leakedBefore.length, after: leakedAfter.length };
+  return {
+    before: leakedBefore.length,
+    after: leakedAfter.length,
+    completed: after.wire.length,
+    planned: after.wire.length + after.held.length,
+  };
 }
 
 // ── Act 2b ───────────────────────────────────────────────────────────────
@@ -319,7 +360,9 @@ async function actNumber(scenario) {
   line(`    ${style.green(String(score.held).padStart(3))}/${score.total}   held with this one`);
   await wait(BEAT);
   if (scenario) {
-    line(`    ${style.green(`${scenario.before} → ${scenario.after}`.padStart(7))}   on the live task, and it still completed`);
+    line();
+    line(`    ${style.green(`${scenario.before} → ${scenario.after}`.padStart(7))}   things leaked on the live task`);
+    line(`    ${style.green(String(`${scenario.completed}/${scenario.planned}`).padStart(7))}   calls still completed, and the one that did not was the injection`);
   }
   await wait(BEAT);
 
