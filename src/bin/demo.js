@@ -29,7 +29,7 @@ import { fieldDiff, panel, style } from './ui.js';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
 
-const IDENTITY = { email: 'sander@example.com', phone: '+32 470 11 22 33' };
+const IDENTITY = { email: 'alex@example.com', phone: '+32 470 11 22 33' };
 const constitution = buildPreset('balanced', { identity: IDENTITY });
 
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));

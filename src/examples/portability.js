@@ -81,7 +81,7 @@ const FLOWS = [
     claude: 'mcp__crm__push',
     openai: 'push_to_crm',
     recipient: { name: 'crm', sector: 'unknown', trust: 'known' },
-    input: { name: 'Sander', api_key: 'sk-ant-abc123def456ghi789jkl' },
+    input: { name: 'Alex', api_key: 'sk-ant-abc123def456ghi789jkl' },
   },
 ];
 

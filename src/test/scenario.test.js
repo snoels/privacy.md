@@ -13,7 +13,7 @@ import { PLANNED_CALLS } from '../demo/inbox.js';
 import { buildPreset } from '../kernel/questions.js';
 
 const constitution = buildPreset('balanced', {
-  identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+  identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
 });
 
 test('an unprotected agent leaks across the whole morning', async () => {

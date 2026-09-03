@@ -25,7 +25,7 @@ setTracingDisabled(true);
 
 const constitution = {
   ...loadYaml(presetPath('balanced')),
-  identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+  identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
 };
 
 /** A model that plays out a fixed script: one tool call, then a closing line. */

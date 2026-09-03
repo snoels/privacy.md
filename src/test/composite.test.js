@@ -14,15 +14,15 @@ import { presetPath, loadYaml } from '../kernel/constitution.js';
 
 const constitution = {
   ...loadYaml(presetPath('balanced')),
-  identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+  identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
   testing: { treatLoopbackAsEgress: true },
 };
 
 // A plain JSON body, as a tool would pass it.
-const PLAIN = 'curl -X POST https://crm.test/i -d \'{"name":"Sander","note":"Physio appointment"}\'';
+const PLAIN = 'curl -X POST https://crm.test/i -d \'{"name":"Alex","note":"Physio appointment"}\'';
 
 // The same body as it arrives after shell escaping — the common real shape.
-const ESCAPED = 'curl -X POST https://crm.test/i -d "{\\"name\\":\\"Sander\\",\\"note\\":\\"Physio appointment\\"}"';
+const ESCAPED = 'curl -X POST https://crm.test/i -d "{\\"name\\":\\"Alex\\",\\"note\\":\\"Physio appointment\\"}"';
 
 // Same body, but to a service the user already uses -- so the unknown-recipient
 // rule stays out of it and we are testing redaction rather than escalation.
@@ -31,7 +31,7 @@ const ESCAPED_KNOWN = ESCAPED.replace('https://crm.test/i', 'https://slack.com/a
 test('a plain JSON body inside a command is found', () => {
   const spans = embeddedJson(PLAIN);
   assert.equal(spans.length, 1);
-  assert.equal(spans[0].value.name, 'Sander');
+  assert.equal(spans[0].value.name, 'Alex');
   assert.equal(spans[0].escaped, false);
 });
 
@@ -46,7 +46,7 @@ test('redacting inside a plain body keeps the command intact', () => {
   const result = redactWithin(PLAIN, 'Physio', '[redacted]');
   assert.ok(result, 'should rewrite rather than give up');
   assert.match(result.text, /^curl -X POST https:\/\/crm\.test\/i -d /);
-  assert.match(result.text, /"name":"Sander"/);
+  assert.match(result.text, /"name":"Alex"/);
   assert.doesNotMatch(result.text, /Physio/);
 });
 
@@ -54,7 +54,7 @@ test('redacting inside an escaped body preserves the escaping', () => {
   const result = redactWithin(ESCAPED, 'Physio', '[redacted]');
   assert.ok(result, 'should rewrite rather than give up');
   assert.doesNotMatch(result.text, /Physio/);
-  assert.match(result.text, /\\"name\\":\\"Sander\\"/, 'escaping must survive the round trip');
+  assert.match(result.text, /\\"name\\":\\"Alex\\"/, 'escaping must survive the round trip');
 });
 
 test('a sentence redaction keeps the sentences around it', () => {

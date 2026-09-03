@@ -21,7 +21,7 @@ import { rmSync } from 'node:fs';
 
 const constitution = {
   ...loadYaml(presetPath('balanced')),
-  identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+  identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
 };
 
 const run = (tool, input) => check({ tool, input }, constitution);
@@ -95,7 +95,7 @@ test('phone numbers are caught in the shapes people actually write them', () => 
 
 test("the user's own contact details are told apart from other people's", () => {
   const context = { identity: constitution.identity };
-  assert.equal(detect({ from: 'sander@example.com' }, context)[0].type, 'contact');
+  assert.equal(detect({ from: 'alex@example.com' }, context)[0].type, 'contact');
   assert.equal(detect({ body: 'jane.doe@acme.com' }, context)[0].type, 'third_party_contact');
 });
 

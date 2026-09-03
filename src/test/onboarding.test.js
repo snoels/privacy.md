@@ -25,7 +25,7 @@ const build = (preset) => {
   const rows = DATA_TYPES.map((type) => ({ ...type, value: scale[type.key] }));
   return {
     version: 1,
-    identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+    identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
     rules: mergeRules(
       rulesFromScale(rows),
       ...QUESTIONS.map((question) => question.rules(question.presets[preset])),

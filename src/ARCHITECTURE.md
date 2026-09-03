@@ -92,13 +92,13 @@ one.
 A real Claude Code session was asked to POST this to a local server:
 
 ```json
-{"name":"Sander","contact":"jane.doe@acme.com","note":"Physio appointment, lower back injury"}
+{"name":"Alex","contact":"jane.doe@acme.com","note":"Physio appointment, lower back injury"}
 ```
 
 What actually reached the server:
 
 ```json
-{"name":"Sander","contact":"[redacted by your privacy constitution]"}
+{"name":"Alex","contact":"[redacted by your privacy constitution]"}
 ```
 
 The request succeeded, the agent reported success, and neither the health detail

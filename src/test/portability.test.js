@@ -24,7 +24,7 @@ const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
 
 const constitution = {
   ...loadYaml(presetPath('balanced')),
-  identity: { email: 'sander@example.com', phone: '+32 470 11 22 33' },
+  identity: { email: 'alex@example.com', phone: '+32 470 11 22 33' },
 };
 
 /** Drive the Claude Code hook exactly as the runtime does: JSON on stdin. */
