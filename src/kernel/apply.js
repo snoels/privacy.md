@@ -7,7 +7,7 @@
 
 import { createHash } from 'node:crypto';
 import { OUTCOMES } from './evaluate.js';
-import { redactWithin } from './composite.js';
+import { redactWithin, stripUrlParams } from './composite.js';
 
 const REDACTED = '[redacted by your privacy constitution]';
 
@@ -124,14 +124,29 @@ export function apply(payload, evaluation, context = {}) {
     const whole = coversWholeField(result, getIn(payload, result.path));
 
     if (result.outcome === OUTCOMES.REDACT) {
-      // Before dropping a whole field, see whether the detail is nested inside a
-      // value the task still needs — a JSON body inside a shell command, say.
+      // A URL is handled the same way whatever the data type: drop the query
+      // parameter carrying the detail. Doing this before the identifier/topic
+      // split matters, or two findings in one URL take two different paths and
+      // the field ends up half rewritten and half blanked.
+      const urlRewrite =
+        typeof current === 'string' ? stripUrlParams(current, result.excerpt) : null;
+
+      // Otherwise, before dropping a whole field, see whether the detail is
+      // nested inside a value the task still needs.
       const nested =
-        whole && typeof current === 'string'
+        urlRewrite === null && whole && typeof current === 'string'
           ? redactWithin(current, result.excerpt, REDACTED)
           : null;
 
-      if (nested) {
+      if (urlRewrite !== null) {
+        input = setIn(input, result.path, urlRewrite);
+        changes.push({
+          path: result.path,
+          action: 'dropped-query-parameter',
+          type: result.type,
+          ruleId: result.ruleId,
+        });
+      } else if (nested) {
         input = setIn(input, result.path, nested.text);
         changes.push({ path: result.path, action: nested.how, type: result.type, ruleId: result.ruleId });
       } else if (whole) {

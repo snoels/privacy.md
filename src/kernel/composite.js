@@ -30,6 +30,36 @@ function parseMaybeEscaped(slice) {
   }
 }
 
+/**
+ * Drop the query parameters carrying a detail, keeping the rest of the URL.
+ *
+ * A URL is a composite value like any other: the host and path are the call,
+ * the query string is payload. Deleting the whole field to remove one parameter
+ * leaves no call to make, which the kernel then has to escalate — so the user
+ * gets asked twice about the same thing and the task never happens.
+ *
+ * @returns {string|null} null when this is not a URL, or nothing would remain
+ */
+export function stripUrlParams(text, excerpt) {
+  let parsed;
+  try {
+    parsed = new URL(text);
+  } catch {
+    return null;
+  }
+
+  const dropped = [];
+  for (const [key, value] of [...parsed.searchParams.entries()]) {
+    if (value.includes(excerpt) || excerpt.includes(value) || key.includes(excerpt)) {
+      parsed.searchParams.delete(key);
+      dropped.push(key);
+    }
+  }
+
+  if (dropped.length === 0) return null;
+  return parsed.toString();
+}
+
 /** Find balanced {...} spans in a string that parse as JSON, escaped or not. */
 export function embeddedJson(text) {
   const found = [];
@@ -102,6 +132,11 @@ export function redactSentence(text, excerpt, replacement) {
  *          to work with and the caller should fall back to dropping the field.
  */
 export function redactWithin(text, excerpt, replacement) {
+  // A URL first: its query string is the most common place a detail hides, and
+  // rewriting it keeps a working call where dropping the field leaves none.
+  const url = stripUrlParams(text, excerpt);
+  if (url !== null) return { text: url, how: 'dropped-query-parameter' };
+
   const spans = embeddedJson(text);
 
   if (spans.length > 0) {

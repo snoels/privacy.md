@@ -10,7 +10,7 @@
     ".": "./kernel/index.js"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --import ./test/setup.js --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"
