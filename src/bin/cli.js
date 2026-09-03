@@ -20,6 +20,7 @@ import {
   loadYaml,
   presetPath,
   saveConstitution,
+  warnings,
 } from '../kernel/constitution.js';
 import { readLedger, summarize } from '../kernel/ledger.js';
 import { menuFor, pruneExpired } from '../kernel/rules.js';
@@ -28,6 +29,8 @@ import { escalate } from '../kernel/freetext.js';
 import { onboard, rehearse } from './onboard.js';
 import { scan, summarizeScan } from '../kernel/history.js';
 import { propose, repeatedDecisions, words } from '../kernel/infer.js';
+import { conform } from '../kernel/conformance.js';
+import { PRESETS, buildPreset } from '../kernel/questions.js';
 import { panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -374,6 +377,84 @@ async function runScan({ days = 30, apply = false } = {}) {
   console.log();
 }
 
+/**
+ * Score a constitution against the probe suite.
+ *
+ * Both numbers are reported. A suite that only shows the protected score is
+ * measuring the probes rather than the protection.
+ */
+function runConform({ compare = false, verbose = false } = {}) {
+  const score = (policy) => conform(policy);
+
+  if (compare) {
+    console.log();
+    console.log(`  ${bold('How each preset scores')}`);
+    console.log(`  ${dim('Same 24 probes. A preset that scores full marks would not be a preset.')}`);
+    console.log();
+    for (const preset of PRESETS) {
+      const policy = buildPreset(preset, { identity: { email: 'you@example.com', phone: '+32 470 11 22 33' } });
+      const result = score(policy);
+      const bar = '█'.repeat(result.held) + dim('·'.repeat(result.total - result.held));
+      // Held is only half the story. A preset that scores well by refusing
+      // everything has broken the agent, so the cost columns matter as much.
+      const cost = [
+        `${result.interrupted} asked`,
+        result.overBlocked > 0 ? style.amber(`${result.overBlocked} broke a working task`) : '0 broke a working task',
+      ].join(', ');
+      console.log(`    ${preset.padEnd(10)} ${bar}  ${String(result.held).padStart(2)}/${result.total}   ${dim(cost)}`);
+    }
+    console.log();
+    return;
+  }
+
+  const constitution = loadConstitution();
+  const result = score(constitution);
+
+  console.log();
+  console.log(`  ${bold('Constitution strength')}`);
+  console.log(`  ${dim(`${result.total} probes designed to tempt a leak.`)}`);
+  console.log();
+  console.log(`    ${style.red(String(result.unprotectedLeaks).padStart(2))}/${result.total}  leak with no constitution`);
+  console.log(`    ${green(String(result.held).padStart(2))}/${result.total}  held with yours`);
+  if (result.interrupted > 0) console.log(`    ${style.amber(String(result.interrupted).padStart(2))}     needed a decision from you`);
+  if (result.overBlocked > 0) {
+    console.log(`    ${style.amber(String(result.overBlocked).padStart(2))}     over-blocked -- a task that should have worked did not`);
+  }
+
+  // An over-block almost always traces back to something the constitution is
+  // missing rather than to a rule being too strict, so say which.
+  for (const warning of warnings(constitution)) {
+    console.log();
+    console.log(`  ${style.amber('!')} ${warning.says}`);
+    console.log(`    ${dim(warning.because)}`);
+    console.log(`    ${dim(warning.fix)}`);
+  }
+
+  console.log();
+  console.log(`  ${bold('By category')}`);
+  for (const [category, entry] of result.byCategory) {
+    const full = entry.held === entry.total;
+    const mark = full ? green('ok  ') : style.amber('gap ');
+    console.log(`    ${mark} ${category.padEnd(18)} ${entry.held}/${entry.total}`);
+  }
+
+  if (result.failures.length > 0) {
+    console.log();
+    console.log(`  ${bold('What still gets through')}`);
+    for (const failure of result.failures) {
+      const tag = failure.expectHard ? dim('known limit') : style.red('unexpected ');
+      console.log(`    ${tag}  ${failure.title}`);
+      if (verbose && failure.leaked.length > 0) {
+        console.log(`                 ${dim(`leaked: ${failure.leaked.join(', ').slice(0, 60)}`)}`);
+      }
+    }
+    console.log();
+    console.log(dim('  Known limits are the edge of the deterministic pass, not bugs:'));
+    console.log(dim('  data split across fields, and data encoded before it is sent.'));
+  }
+  console.log();
+}
+
 async function checkStdin() {
   const raw = await new Promise((resolveInput) => {
     let buffer = '';
@@ -436,6 +517,9 @@ switch (command) {
   case 'scan':
     await runScan({ days: Number(value('days', 30)), apply: flag('apply') });
     break;
+  case 'conform':
+    runConform({ compare: flag('compare'), verbose: flag('verbose') });
+    break;
   default:
     console.log(`
   ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
@@ -446,6 +530,7 @@ switch (command) {
     holds     calls waiting on a decision, with the menu for each
     decide    answer a held call                   ${dim('<hold-id> <number>')}
     scan      what your agent already did          ${dim('--days 30 --apply')}
+    conform   score your constitution against 24 probes  ${dim('--compare')}
     check     evaluate one call read from stdin
     report    what was withheld, and how often you were interrupted
 `);

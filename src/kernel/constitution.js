@@ -64,6 +64,39 @@ export function saveConstitution(constitution, path = CONSTITUTION_PATH) {
 }
 
 /**
+ * Things about a constitution that will bite the user later.
+ *
+ * A missing identity is the one that matters. Without it the kernel cannot tell
+ * the user's own contact details from anyone else's, so it treats all of them
+ * as someone else's and strips them -- which quietly breaks every booking and
+ * signup instead of masking the value and letting the task through.
+ */
+export function warnings(constitution) {
+  const found = [];
+  const identity = constitution?.identity ?? {};
+
+  if (!identity.email && !identity.phone) {
+    found.push({
+      id: 'no-identity',
+      says: 'No identity set, so your own contact details read as someone else\'s.',
+      because: 'They get stripped rather than masked, and calls that need them will fail.',
+      fix: 'npx privacy-constitution init --force, or add identity.email to the file.',
+    });
+  }
+
+  if ((constitution?.rules ?? []).length === 0) {
+    found.push({
+      id: 'no-rules',
+      says: 'This constitution has no rules, so nothing is being checked.',
+      because: 'Every call will pass through untouched.',
+      fix: 'npx privacy-constitution init',
+    });
+  }
+
+  return found;
+}
+
+/**
  * Strip everything personal, leaving a template safe to publish.
  *
  * This is the whole reason provenance is on every rule. The tool minimizing its

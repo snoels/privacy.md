@@ -206,6 +206,22 @@ export const QUESTIONS = [
 /** Rules every constitution carries, whatever the answers. */
 export const ALWAYS = [
   {
+    id: 'nothing-personal-to-adtech',
+    says: 'Nothing personal reaches advertising or analytics. Ever.',
+    data: [
+      'contact',
+      'third_party_contact',
+      'location',
+      'health',
+      'financial',
+      'identity',
+      'special_category',
+      'salary_history',
+    ],
+    recipient: { sector: ['advertising', 'analytics'] },
+    outcome: 'block',
+  },
+  {
     id: 'special-categories-never-to-adtech',
     says: 'Religion, politics, sexuality and union membership never reach advertising or analytics.',
     data: ['special_category'],
@@ -271,6 +287,34 @@ function settingSentence(row, setting) {
     known: `${subject} ${verb('only go', 'only goes')} to services you already use.`,
     needed: `${subject} ${verb('are', 'is')} stripped unless the task genuinely needs ${verb('them', 'it')}.`,
   }[setting.key];
+}
+
+/**
+ * Build a whole constitution from a preset name.
+ *
+ * The presets are defined once, here, as answers and scale positions.
+ * `constitutions/balanced.yaml` is a materialised copy of what this produces
+ * for `balanced`, shipped so the file format is readable without running
+ * anything -- it is documentation, not a second source of truth.
+ */
+export function buildPreset(preset, { identity = {} } = {}) {
+  const scale = scaleForPreset(preset);
+  const rows = DATA_TYPES.map((type) => ({ ...type, value: scale[type.key] }));
+  const rules = mergeRules(
+    rulesFromScale(rows),
+    ...QUESTIONS.map((question) => question.rules(question.presets[preset])),
+    ALWAYS,
+  );
+  return {
+    version: 1,
+    preset,
+    identity,
+    budget: { interruptionsPerDay: QUESTIONS.find((q) => q.budget)?.budget[QUESTIONS.find((q) => q.budget).presets[preset]] ?? 3 },
+    rules: rules.map((rule) => ({
+      ...rule,
+      provenance: rule.provenance ?? { source: 'preset', from: preset },
+    })),
+  };
 }
 
 /** Merge rule lists, later winning on id, so answers override the scale. */

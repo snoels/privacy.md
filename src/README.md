@@ -19,6 +19,7 @@ cd src && npm install
 npx . init                                       # the questionnaire
 npx . install --dir /path/to/a/scratch/project   # registers the PreToolUse hook
 npx . scan                                       # what your agent already did, before any of this
+npx . conform                                    # score against 24 probes  (--compare for all presets)
 npx . rules                                      # what your constitution says, in plain English
 npx . report                                     # what was withheld, and how often you were asked
 ```
@@ -42,6 +43,8 @@ one.
 | `kernel/freetext.js` | Rules typed in the user's own words |
 | `bin/ui.js` | Terminal widgets — select with live preview, the settings matrix |
 | `bin/onboard.js` | The onboarding flow, and the closing rehearsal |
+| `kernel/probes.js` | The 24 probes |
+| `kernel/conformance.js` | Scoring a constitution against them |
 | `adapters/claude-code.js` | The `PreToolUse` hook |
 | `adapters/openai-agents.js` | The OpenAI Agents SDK adapter — wraps tools, all five outcomes |
 | `constitutions/balanced.yaml` | The starting rule set |
@@ -124,6 +127,40 @@ recognise, so no rule ships unseen.
     block       an API key in a request
     ask         your email to a site you have never used
 ```
+
+## The conformance suite
+
+24 probes designed to tempt a leak, scored against a given constitution. A
+benchmark rather than a test suite: it runs against any agent, and a permissive
+constitution scores worse.
+
+```
+    23/24  leak with no constitution
+    22/24  held with yours
+     5     needed a decision from you
+```
+
+```
+  How each preset scores
+
+    cautious   ██████████████████████··  22/24   0 asked, 0 broke a working task
+    balanced   ██████████████████████··  22/24   5 asked, 0 broke a working task
+    open       ███████████████·········  15/24   0 asked, 0 broke a working task
+```
+
+**Two probes invert the test.** A health detail has to *reach* the clinic, and a
+booking has to complete. Over-blocking is counted as failure, so a
+block-everything policy cannot win — a kernel that scores full marks by refusing
+everything has built a nuisance, not a privacy tool.
+
+**Two probes are expected to fail**, and they are marked as such: data split
+across two fields, and data encoded before it is sent. Those are the honest edge
+of a deterministic pass and the reason a model tier belongs above it. A suite
+you score 24/24 on is a suite written to flatter you.
+
+**What it cannot measure.** Whether the user would have said yes. `cautious`
+ties `balanced` here while asking nothing, because blocking and asking look the
+same to a probe — but only one of them leaves the user a choice.
 
 ## Portability, which is the whole claim
 
@@ -240,6 +277,15 @@ redacting an event's `start` breaks the task while looking like the kernel worke
 
 ## Next
 
-Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-7 are done.
-Next: the 24-probe conformance suite (item 8) — the closing number, and the
-thing nobody else will have.
+Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). **All eight items are
+done.**
+
+What is worth doing next, in rough order of value to the demo:
+
+1. A clean Act 0. `scan` currently reads history contaminated by this project's
+   own test fixtures — run it on a longer window, or from a machine that was not
+   used to build this.
+2. A live run against a real model. Everything is proven with a scripted model;
+   swapping in `'gpt-4o'` is one line and about ten minutes with a key.
+3. The model tier above the deterministic pass, which is what would close the
+   two evasion probes.

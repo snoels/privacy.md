@@ -20,6 +20,16 @@ rules:
     outcome: block
     provenance: { source: preset, from: balanced }
 
+  # Advertising and analytics have no legitimate need for any of it. Stated as
+  # a broad deny rather than a list of data types, because a list is a hole
+  # waiting for the next category nobody named.
+  - id: nothing-personal-to-adtech
+    says: "Nothing personal reaches advertising or analytics. Ever."
+    data: [contact, third_party_contact, location, health, financial, identity, special_category, salary_history]
+    recipient: { sector: [advertising, analytics] }
+    outcome: block
+    provenance: { source: preset, from: balanced }
+
   - id: special-categories-never-to-adtech
     says: "Religion, politics, sexuality and union membership never reach advertising or analytics."
     data: [special_category]
