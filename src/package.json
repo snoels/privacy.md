@@ -1,0 +1,22 @@
+{
+  "name": "privacy-constitution",
+  "version": "0.1.0",
+  "description": "Pre-tool-call enforcement of a portable privacy policy for personal AI agents.",
+  "type": "module",
+  "bin": {
+    "privacy-constitution": "./bin/cli.js"
+  },
+  "exports": {
+    ".": "./kernel/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "^2.6.1"
+  }
+}
