@@ -96,7 +96,7 @@ test('phone numbers are caught in the shapes people actually write them', () => 
 test("the user's own contact details are told apart from other people's", () => {
   const context = { identity: constitution.identity };
   assert.equal(detect({ from: 'sander@example.com' }, context)[0].type, 'contact');
-  assert.equal(detect({ to: 'jane.doe@acme.com' }, context)[0].type, 'third_party_contact');
+  assert.equal(detect({ body: 'jane.doe@acme.com' }, context)[0].type, 'third_party_contact');
 });
 
 test('nothing that stays on the machine is evaluated at all', () => {

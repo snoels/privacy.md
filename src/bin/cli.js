@@ -529,10 +529,16 @@ switch (command) {
   case 'conform':
     runConform({ compare: flag('compare'), verbose: flag('verbose') });
     break;
+  case 'demo': {
+    const { runDemo } = await import('./demo.js');
+    await runDemo();
+    break;
+  }
   default:
     console.log(`
   ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
 
+    demo      the whole thing, five acts            ${dim('--fast to skip the pacing')}
     init      set up your constitution              ${dim('--force to start over')}
     rules     what your constitution says, in plain English
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}

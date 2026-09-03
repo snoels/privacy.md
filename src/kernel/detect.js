@@ -17,6 +17,19 @@ function getAt(payload, path) {
   return path.reduce((node, key) => (node == null ? node : node[key]), payload);
 }
 
+/**
+ * Fields that say *where* a call goes, rather than carrying data to it.
+ *
+ * You cannot leak someone's address to that person. Emailing the clinic needs
+ * the clinic's address in `to`, and stripping it does not protect anyone — it
+ * just sends an email with no recipient. Addressing is routing, not payload.
+ *
+ * `cc` and `bcc` are deliberately absent: those genuinely do disclose people to
+ * each other, which is a different thing and stays checked.
+ */
+const ADDRESSING_FIELDS =
+  /^(to|url|uri|endpoint|host|hostname|domain|channel|recipient|destination|dest|target|webhook)$/i;
+
 /** Field names that name a data type outright, whatever the value looks like. */
 const FIELD_NAMES = {
   credentials: /^(api[_-]?key|apikey|secret|token|password|passwd|pwd|auth|authorization|bearer|private[_-]?key|ssh[_-]?key|client[_-]?secret|access[_-]?token|refresh[_-]?token|credentials?)$/i,
@@ -128,11 +141,20 @@ export function detect(payload, context = {}) {
   for (const [path, text] of strings(payload)) {
     const fieldName = String(path[path.length - 1] ?? '');
 
+    // Where the call is going is not a contact detail being disclosed to it.
+    // Only contact detection is exempted: a secret in a URL query string is
+    // still a secret leaving the machine, and skipping the whole field would
+    // wave it through.
+    const isAddressing = ADDRESSING_FIELDS.test(fieldName);
+
+    const skip = (type) => isAddressing && (type === 'contact' || type === 'location');
+
     for (const [type, re] of Object.entries(FIELD_NAMES)) {
-      if (re.test(fieldName)) add(path, type, `field:${fieldName}`, text);
+      if (re.test(fieldName) && !skip(type)) add(path, type, `field:${fieldName}`, text);
     }
 
     for (const hit of patternsIn(text)) {
+      if (skip(hit.type)) continue;
       add(path, hit.type, `pattern:${hit.label}`, hit.excerpt);
     }
 
@@ -141,6 +163,7 @@ export function detect(payload, context = {}) {
     if (context.deep !== false) {
       for (const { text: decoded, via } of decodings(text)) {
         for (const hit of patternsIn(decoded)) {
+          if (skip(hit.type)) continue;
           // The excerpt stays the *encoded* value, because that is the string
           // that has to be removed from the payload.
           add(path, hit.type, `${via}:${hit.label}`, text);

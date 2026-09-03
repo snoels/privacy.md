@@ -12,6 +12,33 @@ The kernel knows nothing about which runtime it is running under. That is what
 makes the same constitution file work in both, which is the portability claim we
 make on stage.
 
+## The demo
+
+```bash
+cd src && npm install
+npx . demo            # the whole thing, seven acts, about three minutes
+npx . demo --fast     # same, no pacing, for rehearsal
+```
+
+Setup, the history scan, where rules come from, the inbox scene run twice, the
+hold menu, portability, and the closing number. It is entirely local — no key,
+no network, no model call. That is not a shortcut: a demo that depends on venue
+wifi is a demo that fails in front of the people you wanted to impress.
+
+Act 3 is the one that matters. The same agent triages the same inbox twice, on
+the real OpenAI Agents SDK loop:
+
+```
+  WITHOUT  5 things reached someone not entitled to them
+  WITH     0 things reached someone not entitled to them
+           and every task the agent set out to do still completed
+```
+
+The inbox carries four proofs in one scene: your own data, a colleague's number
+in a thread you did not write, several destinations where the same detail is
+fine for one and not the other, and a newsletter with an instruction aimed at
+the agent rather than at you. That last call is the only one that never happens.
+
 ## Try it
 
 ```bash
