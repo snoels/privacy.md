@@ -23,6 +23,30 @@ import { OUTCOMES } from '../kernel/evaluate.js';
 import { menuFor } from '../kernel/rules.js';
 import { saveHold } from '../kernel/pending.js';
 
+/**
+ * Put back the keys a strict schema insists on, as null.
+ *
+ * The kernel removes a redacted key outright, which is right: a key present
+ * with a placeholder still tells the recipient the field existed and that you
+ * withheld it. But this SDK validates arguments against the tool's schema, and
+ * a strict schema marks every property required — so a removed key fails
+ * validation and the tool never runs at all. That reads to the user as the
+ * privacy tool breaking their agent, which is the one outcome worth avoiding.
+ *
+ * So the kernel stays runtime-agnostic and the adapter reconciles: absent
+ * becomes null, which carries no value while satisfying the schema.
+ */
+function satisfySchema(input, original, parameters) {
+  const required = parameters?.required;
+  if (!Array.isArray(required) || required.length === 0) return input;
+
+  const reconciled = { ...input };
+  for (const key of required) {
+    if (!(key in reconciled) && key in original) reconciled[key] = null;
+  }
+  return reconciled;
+}
+
 /** What the model is told when a call is refused or held. */
 function explain(result, { held } = {}) {
   const lines = [
@@ -100,7 +124,8 @@ export function guard(tool, options = {}) {
       }
 
       // Allow, redact and substitute all proceed — carrying less.
-      return original(runContext, JSON.stringify(result.input), details);
+      const payload = satisfySchema(result.input, parsed, tool.parameters);
+      return original(runContext, JSON.stringify(payload), details);
     },
   };
 }

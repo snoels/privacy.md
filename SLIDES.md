@@ -18,7 +18,7 @@ shared slide it survives as one sentence instead of getting dropped.
 | Slide | Act | Budget | Answers |
 |---|---|---|---|
 | 1 | Without this | 0:00–0:25 | Is the problem real? |
-| 2 | The constitution | 0:25–1:05 | Who writes the rules? |
+| 2 | privacy.md | 0:25–1:05 | Who writes the rules, and why is it a file? |
 | 3 | Enforcement, and the proof | 1:05–2:05 | Does it work, and does the agent still work? |
 | 4 | It travels, and here is the score | 2:05–2:55 | Is this a standard or a plugin? |
 
@@ -34,8 +34,8 @@ One scenario runs through slides 2, 3 and 4. Breadth reads as unfinished.
 
 A report generated from real agent history, mine, from last month.
 
-This is `privacy-constitution report`, which already exists and prints this
-shape from the ledger:
+This is `privacy.md scan --days 30`, which already exists. It reads the agent
+transcripts sitting on the laptop, with no setup and no model call, and prints:
 
 ```
   What your agent sent, and what it did not
@@ -57,8 +57,10 @@ shape from the ledger:
      12  bpost
 ```
 
-Then the kernel redacts its own report, live, while it is on screen. "Who your
-agent talked to" is the panel that surprises people, so it stays on screen
+The report redacts itself by construction, not as a stage trick. `history.js`
+reports counts and kinds and never the values, because a leak report that quotes
+your secrets back at you on a projector is its own incident. Say that out loud.
+"Who your agent talked to" is the panel that surprises people, so it stays up
 longest.
 
 ### Said out loud
@@ -93,83 +95,116 @@ screen is the point rather than a problem.
 
 ---
 
-## Slide 2 · The constitution
+## Slide 2 · privacy.md
 
-**Headline:** Nobody writes a privacy policy for themselves. So we don't ask them to.
+**Headline:** `AGENTS.md` tells an agent how to work. Nothing tells it what it may send.
 
 ### On screen
 
-Left, the tool reading the same history and proposing rules in plain language:
+Open on the file every runtime in the room already reads, then the one none of
+them do:
+
+```
+  AGENTS.md     read by 30+ runtimes . 60,000+ repos . Linux Foundation
+                "run the tests with npm test"
+                "the API layer lives in src/api"
+
+  privacy.md    read by none of them
+                ?
+```
+
+Then the file, written the way a person would write it:
+
+```markdown
+  # privacy.md
+
+  Health details only go to a healthcare provider.
+  My address goes to delivery services and nowhere else.
+  Keys and secrets never leave this machine, including into prompts.
+  Other people's contact details get stripped before any third-party tool.
+  Never tell anyone I am pregnant.
+```
+
+Then compile it, on screen, and show what the kernel actually evaluates:
+
+```yaml
+  - id: health-only-to-healthcare
+    says: "Health details only go to a healthcare provider, never anywhere else."
+    data: [health]
+    recipient: { trust: [known, task_scoped, agent_chosen, public, model_provider] }
+    outcome: redact
+    provenance: { source: written, line: 3 }
+```
+
+And where it came from, for the rules nobody typed:
 
 ```
   You have sent your address to delivery services 12 times
   and to nothing else.
 
     → address goes to logistics only              [accept] [edit] [skip]
-
-  You have sent health details to a healthcare provider,
-  and never anywhere else.
-
-    → health goes to healthcare only              [accept] [edit] [skip]
 ```
 
-Right, what one accepted rule becomes on disk:
-
-```yaml
-- id: health-only-to-healthcare
-  says: "Health details only go to a healthcare provider, never anywhere else."
-  data: [health]
-  recipient: { trust: [known, task_scoped, agent_chosen, public, model_provider] }
-  outcome: redact
-  provenance: { source: inferred, from: history, at: 2026-09-03T09:14Z }
-```
-
-A broad deny, with a narrow allow for healthcare recipients underneath it. Not a
-list of banned apps, because a list is a hole waiting for the next messaging
-service nobody thought to name.
-
-Underneath, the four layers, and where each one lives:
+Underneath, the four layers:
 
 ```
   template       journalist@1.2.0      published, versioned, no personal facts
   organisation   employer policy       admin, within the org
-  personal       yours                 local only, never uploaded
+  personal       your privacy.md       local only, never uploaded
   session        granted mid-task      expires
 ```
 
 ### Said out loud
 
-Nobody sits down and writes a privacy policy for themselves. So the tool reads
-what you have already done and proposes the rules in plain language. Accept,
-edit, skip. Seven questions where the presets disagree, and that is onboarding.
+Every agent runtime in this room already reads a markdown file to learn how to
+work in your repo. Thirty of them read `AGENTS.md`. Sixty thousand repositories
+have one. The Linux Foundation stewards it now.
 
-Every rule carries a plain English line, so you can audit it and I can project
-it. Every rule carries its provenance, so you know whether you chose it or we
-guessed it.
+Not one of them reads a file to learn what it may send out. That is the file.
 
-Your own constitution is itself sensitive. A rule that says "never disclose my
-HIV status" leaks the fact by existing, so it stays on your machine, always. No
-account, no upload. What travels is a template, which is generic rules and no
-facts about anyone. A privacy NGO can publish a GDPR baseline. Your employer can
-publish one for staff.
+You write it in English, one rule per line. It compiles to what the kernel
+evaluates, and I am showing you both because the compiled form is the one that
+runs, deterministically, in front of every call. Nothing reads prose at
+tool-call time.
+
+Nobody sits down and writes a privacy policy for themselves, so most of these
+lines you never type. The tool reads what you have already done and proposes
+them. Accept, edit, skip. Six questions where the presets disagree, and that is
+onboarding.
+
+Your own file is itself sensitive. A line that says "never disclose my HIV
+status" leaks the fact by existing, so it stays on your machine, always. No
+account, no upload. What travels is a template: generic rules, no facts about
+anyone. A privacy NGO publishes a GDPR baseline. Your employer publishes one for
+staff.
 
 ### What it proves
 
-Where the policy comes from, which is the first thing anyone asks. And that we
-are not building the centralised store of everyone's privacy preferences, which
-is the thing this project argues against.
+That this is a convention rather than a product. `AGENTS.md` spread because it
+was a filename anyone could implement and nobody owned, and this is the empty
+slot beside it.
+
+It also answers where the policy comes from, which is the first thing anyone
+asks, and it shows we are not building the centralised store of everyone's
+privacy preferences.
 
 ### Notes
 
-`asTemplate()` in `kernel/constitution.js` already does the export: it drops
-every rule whose provenance is personal and keeps the rest. That is a free beat
-if we want it, and it is the tool performing on its own output the same
-minimization it performs on every tool call.
+**Compile it live or lose the thesis.** A name ending in `.md` invites the
+assumption that a model reads prose in front of every tool call, which would
+undo both claims the whole pitch rests on: deterministic, and before the call.
+Ten seconds of showing `privacy.md` become `rules.yaml` kills that assumption
+permanently. `kernel/freetext.js` already does the compiling, offline, with no
+key and no network.
 
-The strongest beat available here is the free-text one. Type "never tell anyone
-I am pregnant", show the compiled rule before it saves, then run it against two
-past flows and show what would have happened. It only earns the time if it is
-solid, because a misinterpreted privacy rule on stage is worse than no rule.
+The free-text line is the one to demo. Type "never tell anyone I am pregnant",
+show the compiled rule before it saves, then run it against two past flows and
+show what would have happened. A misinterpreted privacy rule on stage is worse
+than no rule, so it only earns the time if it is solid.
+
+`asTemplate()` already drops every personal rule and keeps the rest, which is
+the tool performing on its own output the same minimization it performs on every
+tool call. A free beat if there is room.
 
 ---
 
@@ -243,25 +278,25 @@ the agent asks you in the conversation you are already in:
      that need it will fail
      writes the rule: Your contact details never reach clinic.example.
 
-  Then run: npx privacy-constitution decide 7f3a91 2
+  Then run: npx privacy.md decide 7f3a91 2
 ```
 
 You answer in the conversation. The command records it:
 
 ```
-  $ npx privacy-constitution decide 7f3a91 2
+  $ npx privacy.md decide 7f3a91 2
 
     Send a masked value -- the call still works, clinic.example gets a
                            relay rather than the real thing
     rule added: Your contact details reach clinic.example only as a mask.
-    ~/.constitution/constitution.yaml
+    ~/.privacy/privacy.md
 
     Retry the call. The constitution now covers it.
 ```
 
 The menu is a data structure, not a screen, and that is why it has two
 surfaces. Relayed through the agent it is a numbered list with every rule shown
-at once. Answered at your own terminal, `decide 7f3a91` with no number gives you
+at once. Answered at your own terminal, `privacy.md decide 7f3a91` with no number gives you
 an arrow-key picker with the rule previewing as the cursor moves. Same
 `menuFor()` behind both.
 
@@ -320,14 +355,14 @@ sentence, and few teams will touch it.
 
 ## Slide 4 · It travels, and here is the score
 
-**Headline:** Same file, different runtime, same enforcement.
+**Headline:** One `privacy.md`, every runtime.
 
 ### On screen
 
-Split screen, one constitution, two agents:
+Split screen, one file, two agents:
 
 ```
-  ~/.constitution/constitution.yaml
+              ~/.privacy/privacy.md
         |                        |
         v                        v
   Claude Code               OpenAI Agents SDK
@@ -354,7 +389,7 @@ Then the score:
 
 ### Said out loud
 
-Same constitution file, dropped into an agent built on a different stack, by
+Same `privacy.md`, dropped into an agent built on a different stack, by
 different people, in different code. Same enforcement. The policy is yours, and
 it outlives whichever agent you happen to be using.
 
@@ -369,6 +404,11 @@ fields were available to send and 3 went out, and both runs completed.
 
 That battery scores any agent against any constitution, including agents we did
 not build.
+
+And the portability claim is not a promise, it is a test. `portability.test.js`
+drives both adapters the way their runtimes do and compares them against each
+other. If the two ever disagree on the same flow, the build fails and this slide
+is wrong.
 
 ### Close
 
@@ -404,7 +444,7 @@ them go on a slide until a run produced them.
 
 | Slide | Figure | Where it comes from | Exists? |
 |---|---|---|---|
-| 1 | Calls checked, fields withheld, rules fired, top recipients | `privacy-constitution report`, over a ledger with real history in it | Command yes, the history no |
+| 1 | Calls checked, fields withheld, rules fired, top recipients | `privacy.md scan --days 30`, over the transcripts already on the laptop | Yes |
 | 3 | Nothing numeric | | |
 | 4 | Leaks unprotected against leaks with the kernel | The 24-probe conformance suite, run twice | No |
 | 4 | Fields available against fields sent | `report`, on the demo task | Yes |
@@ -415,9 +455,10 @@ CVE needs checking against a primary source before it is projected.
 
 ## What the slides claim, against what the build does
 
-Checked against `main` at `8d3c24f`, "The hold loop, inline in the agent
-session". All 24 tests pass. Re-check this section whenever the kernel moves,
-because it moved twice while these slides were being written.
+Checked against `main` at `45fe455`, "Read history back, and infer rules from
+it", plus uncommitted work in the tree. 53 tests, 52 passing. Re-check this
+section whenever the kernel moves, because it moved four times while these
+slides were being written.
 
 ### Backed by code
 
@@ -431,25 +472,38 @@ because it moved twice while these slides were being written.
   previews are generated by `kernel/rules.js`, not mocked up for the slide.
 - **Temporary grants.** Rules carry `expires`, and `decide` runs `pruneExpired`
   before it writes, so an hour-long grant is swept on the next decision.
-- **The report.** `privacy-constitution report` prints calls checked, fields
+- **The report.** `privacy.md report` prints calls checked, fields
   available against fields sent, interruptions, rules that fired and top
   recipients. Slides 1 and 4 both read off it.
 - **Template export.** `asTemplate()` drops everything personal and keeps the
   rest.
+- **Reading history back.** `kernel/history.js` plus `scan --days 30` reads the
+  agent transcripts already on the machine, and `kernel/infer.js` proposes rules
+  from them (`scan --apply`). That is slide 1's whole report and slide 2's
+  accept-edit-skip screen, both of which this section said were missing an hour
+  ago.
+- **Both runtimes.** `adapters/claude-code.js` is a `PreToolUse` hook,
+  `adapters/openai-agents.js` exports `guard`, `guardAll` and
+  `constitutionGuardrail`. `@openai/agents` is a devDependency now, so
+  `portability.test.js` runs against the real SDK rather than a mock, and drives
+  each adapter the way its runtime does before comparing them to each other.
 
 ### Not yet true
 
-- **The OpenAI adapter.** `src/adapters/` holds `claude-code.js` and nothing
-  else. Slide 4's right-hand column is item 7 in the build order, and it is now
-  the single largest gap on any slide.
+- **`privacy.md` itself.** The kernel reads `~/.constitution/constitution.yaml`
+  today. Slides 2 and 4 both show `~/.privacy/privacy.md` compiling to
+  `rules.yaml`. `kernel/freetext.js` does the compiling already, so this is a
+  path change plus a write-back in English, not new machinery. Until it lands,
+  slide 2's central image is the one thing on stage that does not exist.
 - **The conformance suite.** No probes anywhere in `src/`. Slide 4's closing
   number has nothing behind it.
-- **Slide 1's history.** `report` reads the ledger, and the ledger only fills
-  once the hook has been running. A retrospective over last month cannot come
-  from it. Either the hook runs in observe-only for long enough, or something
-  makes one pass over the transcripts already on disk.
-- **Slide 2's accept-edit-skip screen.** There is no `init` flow that proposes
-  inferred rules. `init` writes a preset and stops.
+- **One failing test, and it is on slide 4's critical path.**
+  `openai-agent.test.js:107`, "the SDK runner delivers a minimized payload to
+  the tool", asserts the tool still runs with reduced arguments and gets zero
+  invocations instead of one. Blocking is fine and the credential test beside it
+  passes. What is unproven is minimization surviving the round trip through the
+  real SDK runner, which is the half of slide 4 that says the task still
+  completes. Being written as these slides were written, so re-check.
 
 ### Fixed since the first draft of these slides
 

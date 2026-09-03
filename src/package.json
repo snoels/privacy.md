@@ -18,5 +18,9 @@
   "license": "MIT",
   "dependencies": {
     "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@openai/agents": "^0.17.0",
+    "zod": "^4.5.4"
   }
 }

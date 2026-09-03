@@ -1,4 +1,6 @@
-# Privacy Constitution
+# privacy.md
+
+`AGENTS.md` tells an agent how to work. `privacy.md` tells it what it may send.
 
 A pre-tool-call kernel that checks every outbound flow from a personal AI agent
 against a portable set of rules the user never had to write, and lets the task

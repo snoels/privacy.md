@@ -1,4 +1,6 @@
-# Privacy Constitution
+# privacy.md
+
+`AGENTS.md` tells an agent how to work. `privacy.md` tells it what it may send.
 
 A pre-tool-call kernel that checks every outbound flow from a personal AI agent
 against a portable set of rules the user never had to write, and lets the task
@@ -28,7 +30,7 @@ Two phases: a one-time setup, then a check on every call the agent makes.
 
 ```
   ONCE, AT INSTALL
-  npx privacy-constitution init
+  npx privacy.md init
         │
         ├─ pick a preset            Cautious · Balanced · Open
         ├─ ~7 questions             only where the presets disagree
@@ -36,7 +38,8 @@ Two phases: a one-time setup, then a check on every call the agent makes.
         └─ free text (optional)     "never tell anyone I'm pregnant" → compiled to rules
         │
         ▼
-  ~/.constitution/constitution.yaml     local, never uploaded
+  ~/.privacy/privacy.md                 what you wrote, local, never uploaded
+  ~/.privacy/rules.yaml                 compiled from it, what the kernel reads
   hook installed into the agent runtime
 
 
@@ -262,16 +265,46 @@ protecting sources has genuinely different needs from a doctor, and those
 profiles carry no facts about anyone, so they ship safely.
 
 ```
-$ npx privacy-constitution init --profile journalist
+$ npx privacy.md init --profile journalist
 
   installed  journalist@1.2.0        34 rules
   installed  eu-baseline@2026.1      18 rules, inherited
-  local      ~/.constitution/        personal layer, never uploaded
+  local      ~/.privacy/             personal layer, never uploaded
 ```
 
 A privacy NGO publishes a GDPR-strict baseline. An employer publishes one for
 staff. That is a better answer to "how does this scale" than offering to host
 it.
+
+### One file you write, one the kernel reads
+
+The name commits us to markdown as the authored surface, and the kernel cannot
+evaluate prose in front of a tool call. So there are two files, and only one of
+them is written by a person.
+
+```
+  ~/.privacy/privacy.md      you write this. plain English, one rule per line
+        │
+        │  compiled at init, and whenever a hold writes a new rule
+        ▼
+  ~/.privacy/rules.yaml      the kernel reads this. data type, recipient,
+                             outcome, provenance, expiry
+```
+
+`kernel/freetext.js` already does the compiling. It is deterministic, runs
+offline with no key and no network, shows the compiled rule before saving it,
+and reports what it could not place rather than dropping it quietly.
+
+**Say this once on stage and the risk disappears.** A name ending in `.md`
+invites the assumption that a model reads prose at tool-call time, which would
+undo the two claims the whole thing rests on: that the check is deterministic,
+and that it happens before the call. Compile `privacy.md` live, show the rules
+that came out, and nobody forms that assumption. It is also the free-text beat
+we already wanted.
+
+The reverse direction matters as much. A rule granted mid-task is written back
+in English into `privacy.md`, not only into the compiled file, or the file the
+user owns rots while the one they cannot read grows.
 
 ### Layering
 
@@ -687,6 +720,12 @@ is both halves: do not rely on the recipient, and do not publish a spec with no
 reference implementation.
 
 `privacy.md`, `privacy-md` and `constitution.md` are all free on npm.
+
+**Constitution stays the concept word.** The file is `privacy.md`, and what
+lives in it is your privacy constitution. "Held by your privacy constitution
+before this reaches opentable.com" is good copy and the adapter already emits
+it. `AGENTS.md` works the same way: the file has a filename, the thing inside it
+is agent instructions. Do not flatten one into the other in either direction.
 
 #### Scope of the third-party subject problem
 

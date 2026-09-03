@@ -162,6 +162,28 @@ const agent = new Agent({
 });
 ```
 
+**Proven through the SDK's own runner, with no API key.** The SDK lets you plug
+a `Model`, so `test/openai-agent.test.js` scripts one that returns a fixed tool
+call. That exercises the real agent loop — tool dispatch, result handling — with
+no network and the same result every time, which matters because a demo that
+depends on venue wifi is a demo that fails. Swapping the scripted model for
+`'gpt-4o'` is the only change needed to run it against a real model.
+
+Two things that cost an hour and are worth knowing if you extend this:
+
+- `run(agent, input, { model })` is *not* where model resolution reads from. Set
+  `model` on the `Agent` or it reaches for a real key regardless.
+- Tracing exports to OpenAI by default and wants a key even when the model is
+  local. `setTracingDisabled(true)`.
+
+**Redaction versus strict schemas.** The kernel removes a redacted key outright,
+which is right — a key present with a placeholder still announces that something
+was withheld. But this SDK validates arguments against the tool schema, and a
+strict schema marks every property required, so a removed key fails validation
+and the tool never runs. That reads as the privacy tool breaking the agent. The
+kernel stays runtime-agnostic; the adapter puts required keys back as `null`,
+which carries no value while satisfying the schema.
+
 **Why this wraps tools rather than using the SDK's own guardrails.**
 `defineToolInputGuardrail` can allow, reject, or throw — it cannot rewrite the
 call. Block and ask would work; redact and substitute would not, and those are
