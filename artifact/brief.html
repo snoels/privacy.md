@@ -1,0 +1,1077 @@
+<title>Privacy Constitution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F7F9;
+    --surface:     #FFFFFF;
+    --sunk:        #EDEFF4;
+    --ink:         #12141B;
+    --ink-2:       #4C5366;
+    --ink-3:       #7B8296;
+    --rule:        #DDE1E9;
+    --rule-strong: #C4CAD6;
+    --accent:      #303C8C;
+    --accent-soft: #E7E9F6;
+    --allow:       #2E6A4E;
+    --redact:      #5B4FA8;
+    --substitute:  #1F6B77;
+    --hold:        #A56A14;
+    --deny:        #9B3B32;
+    --shadow:      0 1px 2px rgba(18, 20, 27, .05), 0 8px 24px -16px rgba(18, 20, 27, .25);
+
+    --measure: 68ch;
+    --step-0: .9375rem;
+    --step-1: 1.0625rem;
+    --step-2: 1.3125rem;
+    --step-3: 1.6875rem;
+    --step-4: 2.25rem;
+    --micro: .75rem;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1016;
+      --surface:     #161923;
+      --sunk:        #1B1F2A;
+      --ink:         #E6E8EE;
+      --ink-2:       #A0A7B8;
+      --ink-3:       #737B8D;
+      --rule:        #262B38;
+      --rule-strong: #38404F;
+      --accent:      #8E9BE8;
+      --accent-soft: #1D2240;
+      --allow:       #5FB68C;
+      --redact:      #A79BF0;
+      --substitute:  #5FB1BE;
+      --hold:        #DFA84D;
+      --deny:        #E08579;
+      --shadow:      0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0E1016;
+    --surface:     #161923;
+    --sunk:        #1B1F2A;
+    --ink:         #E6E8EE;
+    --ink-2:       #A0A7B8;
+    --ink-3:       #737B8D;
+    --rule:        #262B38;
+    --rule-strong: #38404F;
+    --accent:      #8E9BE8;
+    --accent-soft: #1D2240;
+    --allow:       #5FB68C;
+    --redact:      #A79BF0;
+    --substitute:  #5FB1BE;
+    --hold:        #DFA84D;
+    --deny:        #E08579;
+    --shadow:      0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: var(--step-1);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: "IBM Plex Serif", ui-serif, Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+    letter-spacing: -.012em;
+  }
+
+  a { color: var(--accent); text-underline-offset: .2em; }
+  a:focus-visible,
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .masthead-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 2.75rem 1.5rem 2.25rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--micro);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  h1 { font-size: var(--step-4); font-weight: 600; line-height: 1.12; }
+  .standfirst {
+    max-width: var(--measure);
+    color: var(--ink-2);
+    font-size: var(--step-2);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.75rem;
+    font-size: var(--micro);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    padding-top: .5rem;
+    border-top: 1px solid var(--rule);
+  }
+  .meta-row b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---------- shell ---------- */
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 190px minmax(0, 1fr); gap: 4rem; align-items: start; }
+    nav.toc { position: sticky; top: 1.5rem; }
+  }
+
+  nav.toc { padding-top: 3rem; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .1rem; counter-reset: toc; }
+  nav.toc a {
+    display: grid;
+    grid-template-columns: 1.9em 1fr;
+    gap: .2rem;
+    padding: .3rem 0;
+    font-size: var(--micro);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    color: var(--ink-3);
+    text-decoration: none;
+    border-top: 1px solid var(--rule);
+  }
+  nav.toc li:first-child a { border-top: 0; }
+  nav.toc a::before { counter-increment: toc; content: counter(toc, decimal-leading-zero); color: var(--rule-strong); }
+  nav.toc a:hover { color: var(--accent); }
+
+  main { padding-top: 3rem; display: grid; gap: 4.25rem; min-width: 0; }
+
+  section { display: grid; gap: 1.15rem; scroll-margin-top: 1.5rem; min-width: 0; }
+  section > h2 {
+    font-size: var(--step-3);
+    font-weight: 600;
+    padding-bottom: .6rem;
+    border-bottom: 2px solid var(--ink);
+  }
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 600;
+    margin-top: .5rem;
+  }
+  section p { margin: 0; max-width: var(--measure); }
+  section > p + p { margin-top: -.2rem; }
+
+  .lede { font-size: var(--step-2); line-height: 1.5; color: var(--ink-2); max-width: var(--measure); }
+
+  ul.plain { margin: 0; padding-left: 1.1rem; display: grid; gap: .4rem; max-width: var(--measure); }
+  ul.plain li::marker { color: var(--rule-strong); }
+
+  strong { font-weight: 600; }
+
+  /* ---------- outcome language ---------- */
+
+  .chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .4em;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--micro);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chip::before {
+    content: "";
+    width: .5em; height: .5em;
+    border-radius: 50%;
+    background: currentColor;
+    transform: translateY(-.05em);
+  }
+  .o-allow { color: var(--allow); }
+  .o-redact { color: var(--redact); }
+  .o-substitute { color: var(--substitute); }
+  .o-hold { color: var(--hold); }
+  .o-deny { color: var(--deny); }
+
+  .outcomes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .outcomes > div {
+    padding: 1rem 1.15rem 1.15rem;
+    border-left: 1px solid var(--rule);
+    display: grid;
+    gap: .45rem;
+    align-content: start;
+  }
+  .outcomes > div:first-child { border-left: 0; }
+  .outcomes p { font-size: var(--step-0); color: var(--ink-2); line-height: 1.5; }
+
+  /* ---------- specimens ---------- */
+
+  figure { margin: 0; display: grid; gap: .55rem; min-width: 0; }
+  figcaption {
+    font-size: var(--micro);
+    color: var(--ink-3);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .term {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.1rem 1.25rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8125rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--ink);
+    tab-size: 2;
+  }
+  .term .dim { color: var(--ink-3); }
+  .term .cut { color: var(--deny); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .term .keep { color: var(--allow); }
+  .term .sub { color: var(--substitute); }
+  .term .lab { color: var(--accent); }
+  .term .warn { color: var(--hold); }
+  .term .sel { background: var(--accent-soft); color: var(--ink); display: inline-block; width: 100%; }
+
+  /* ---------- tables ---------- */
+
+  .tw { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--step-0); min-width: 520px; }
+  th, td { text-align: left; padding: .68rem .95rem; border-top: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    border-top: 0;
+    border-bottom: 1px solid var(--rule-strong);
+    font-size: var(--micro);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    white-space: nowrap;
+  }
+  td.mono { font-size: .8125rem; }
+  td b { font-weight: 600; }
+  tbody tr:hover { background: var(--sunk); }
+
+  /* ---------- timed sequence ---------- */
+
+  .arc { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .act {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.15rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .act-time {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--micro);
+    letter-spacing: .04em;
+    color: var(--accent);
+    padding-top: .28rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .act-body { display: grid; gap: .4rem; min-width: 0; }
+  .act-body h3 { margin: 0; font-size: var(--step-1); }
+  .act-body p { font-size: var(--step-0); color: var(--ink-2); }
+  .act-body .proves {
+    font-size: var(--micro);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .act-body .proves b { color: var(--ink-2); font-weight: 500; }
+
+  /* ---------- evidence ---------- */
+
+  .ev { display: grid; gap: 1.25rem; }
+  .ev-group { display: grid; gap: .5rem; padding-left: 1rem; border-left: 2px solid var(--rule-strong); }
+  .ev-group h3 { margin: 0; }
+  .ev-group ul { margin: 0; padding-left: 1.05rem; display: grid; gap: .35rem; font-size: var(--step-0); color: var(--ink-2); max-width: var(--measure); }
+  .ev-group .proves { font-size: var(--step-0); color: var(--ink); }
+
+  .note {
+    border-left: 2px solid var(--hold);
+    padding: .1rem 0 .1rem 1rem;
+    color: var(--ink-2);
+    font-size: var(--step-0);
+    max-width: var(--measure);
+  }
+
+  /* ---------- chart ---------- */
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.25rem 1.25rem 1rem;
+    overflow-x: auto;
+  }
+  .chart-wrap svg { display: block; min-width: 460px; width: 100%; height: auto; }
+  .chart-key { display: flex; gap: 1.25rem; flex-wrap: wrap; padding-top: .75rem; margin-top: .75rem; border-top: 1px solid var(--rule); }
+
+  /* ---------- decisions ---------- */
+
+  .dl { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .dl-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .3rem;
+    padding: .95rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  @media (min-width: 720px) {
+    .dl-row { grid-template-columns: 15rem minmax(0, 1fr); gap: 1.5rem; align-items: baseline; }
+  }
+  .dl-row dt { font-weight: 600; font-size: var(--step-0); }
+  .dl-row dd { margin: 0; font-size: var(--step-0); color: var(--ink-2); }
+  .dl-row dd b { color: var(--ink); font-weight: 600; }
+
+  .stack { display: grid; gap: 1.15rem; }
+  .two-up { display: grid; gap: 1.5rem; }
+  @media (min-width: 860px) { .two-up { grid-template-columns: 1fr 1fr; } }
+
+  /* ---------- editing ---------- */
+
+  .ed {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .45rem .4rem .85rem;
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--micro);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+  .ed-status { color: var(--ink-3); white-space: nowrap; }
+  .ed-status:empty { display: none; }
+  .ed button {
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    padding: .4rem .75rem;
+    border-radius: 2px;
+    border: 1px solid var(--rule-strong);
+    background: var(--sunk);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .ed button:hover { border-color: var(--ink-3); }
+  .ed button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--surface);
+  }
+  .ed button.primary:hover { filter: brightness(1.1); }
+  .ed button[disabled] { opacity: .55; cursor: default; }
+
+  body.is-editing main section {
+    outline: 1px dashed var(--rule-strong);
+    outline-offset: .85rem;
+    border-radius: 2px;
+  }
+  body.is-editing main section:focus-within { outline: 1px solid var(--accent); }
+  body.is-editing [contenteditable="true"]:focus { outline: none; }
+  body.is-editing { padding-bottom: 3rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">Build brief · Agentic AI, making privacy native to personal agents</div>
+    <h1>Privacy Constitution</h1>
+    <p class="standfirst">A pre-tool-call kernel that checks every outbound flow from a personal agent against a portable set of rules the user never had to write, and lets the task succeed with less data.</p>
+    <div class="meta-row">
+      <span>Enforcement <b>before egress</b></span>
+      <span>Policy <b>local, portable</b></span>
+      <span>Adapters <b>Claude Code · OpenAI Agents SDK</b></span>
+      <span>Install <b>npx</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#thesis">Thesis</a></li>
+      <li><a href="#outcomes">Outcomes</a></li>
+      <li><a href="#interrupt">The interruption</a></li>
+      <li><a href="#constitution">The constitution</a></li>
+      <li><a href="#onboarding">Onboarding</a></li>
+      <li><a href="#rules">Rule taxonomy</a></li>
+      <li><a href="#measure">Measurement</a></li>
+      <li><a href="#demo">Demo arc</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#build">Build order</a></li>
+      <li><a href="#open">Open calls</a></li>
+      <li><a href="#risk">Judge questions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="thesis">
+      <h2>Thesis</h2>
+      <p class="lede">When a personal agent acts for you, every tool call is a data transfer. Today nobody checks any of them. The agent has become a data controller that was never told the rules.</p>
+      <p>The fix is a check placed in front of the tool call, not behind it. The agent's runtime hands each call to a kernel, the kernel evaluates it against the user's constitution, and only then does the call go out. Post-hoc detection gives you an incident report, not privacy.</p>
+      <p>Every previous attempt at this failed in the same way. P3P asked websites to declare their own practices and nobody verified them, so sites sent junk tokens to get past Internet Explorer's cookie blocking and Google was fined for it in 2012. Do Not Track sent one honest header and relied on the recipient to honour it, which almost nobody did. Global Privacy Control only works where California law forces it. All three placed the decision with the party receiving the data.</p>
+      <p><strong>This design does not ask anyone to behave.</strong> The check happens at your own boundary, before the data leaves, so the counterparty's incentive to defect is irrelevant. That is the sentence the pitch opens with.</p>
+      <p class="note">Honest limit, worth stating before a judge finds it: coverage extends only to flows that pass through the interception point. An agent using a channel you did not wrap is invisible. The tool boundary is a chokepoint by construction in these runtimes, which is why it is the right place to sit, but the dashboard reports coverage rather than claiming totality.</p>
+    </section>
+
+    <section id="outcomes">
+      <h2>Five outcomes, and block is the rare one</h2>
+      <p>A kernel that only blocks is a nuisance, and the demo dies the moment the agent stops working. The product thesis is minimisation: the task completes, with less of you in it.</p>
+      <div class="outcomes">
+        <div>
+          <span class="chip o-allow">Allow</span>
+          <p>The flow matches a rule that permits it. No interruption, logged for the summary.</p>
+        </div>
+        <div>
+          <span class="chip o-redact">Redact</span>
+          <p>Strip the offending fields, send the rest. The default outcome and the one the cursor lands on.</p>
+        </div>
+        <div>
+          <span class="chip o-substitute">Substitute</span>
+          <p>The field is mandatory, so send a masked value. Relay address, alias email, virtual number.</p>
+        </div>
+        <div>
+          <span class="chip o-hold">Ask</span>
+          <p>Genuinely ambiguous. Hold the call, put the decision in front of the user, write a rule from the answer.</p>
+        </div>
+        <div>
+          <span class="chip o-deny">Block</span>
+          <p>A hard rule fired. Credentials, special categories to advertising. Should be uncommon.</p>
+        </div>
+      </div>
+      <p><strong>Substitute is what stops users capitulating.</strong> Some services genuinely require a phone number, so redaction breaks the task and the only way forward is to allow. A relay number means the task succeeds and they still do not have you. Hide My Email and virtual cards already normalised this, so it needs no explaining on stage.</p>
+
+      <figure>
+        <figcaption>Redaction specimen · outbound calendar write</figcaption>
+        <div class="term">$ agent → <span class="lab">calendar.events.create</span>
+{
+  <span class="keep">"title"</span>:    <span class="keep">"Appointment"</span>,
+  <span class="keep">"start"</span>:    <span class="keep">"2026-09-11T14:00+02:00"</span>,
+  <span class="cut">"notes":    "Physio, lower back injury, ref #A2213"</span>,
+  <span class="cut">"attendee": "+32 470 88 21 04"</span>
+}
+
+<span class="chip o-redact" style="font-size:.8125rem">REDACT</span>  2 fields removed · <span class="dim">rule: health never reaches calendars</span>
+       <span class="dim">task outcome: event still created</span></div>
+      </figure>
+
+      <p>Performance follows from this too. If every call waits on a model you add seconds to everything and the tool becomes unusable. Run a fast deterministic pass first, on patterns, known field names and known recipients, which resolves most calls, and escalate only the ambiguous remainder to a model, cached by flow signature. That is also the concrete answer when someone asks how it scales.</p>
+    </section>
+
+    <section id="interrupt">
+      <h2>The interruption is where the constitution gets built</h2>
+      <p>The questionnaire is guessing. The moment of a real hold is the only time the user has full context on what they actually want, so this screen deserves the most design time and the most seconds on stage.</p>
+
+      <figure>
+        <figcaption>Hold specimen · the graded response menu</figcaption>
+        <div class="term"><span class="warn">HELD</span>  <span class="lab">opentable.reserve</span> wants <span class="warn">phone_number</span>
+      recipient: opentable.com <span class="dim">· first contact, you have not used this before</span>
+      rule hit:  contact details need approval for services you have not used
+
+<span class="sel">  ▸ Redact and send          booking succeeds, they get no number   </span>
+    Substitute a relay number  booking succeeds, they get a mask
+    Allow once                 this call only
+    Allow for this recipient   opentable.com, any future call
+    Allow for this task type   restaurant booking, any site
+    Allow for the next hour    expires 15:42, then reverts
+    Never                      writes a deny rule
+
+  <span class="dim">writes rule →</span> <span class="lab">redact phone_number from opentable.com; retry without it</span></div>
+      </figure>
+
+      <p>Four things make this work.</p>
+      <ul class="plain">
+        <li><strong>The rule preview updates live as the cursor moves.</strong> "Allow for this task type" means nothing on its own. The line underneath resolves it to <span class="mono">allow phone_number to restaurant booking sites</span>, and one row up to <span class="mono">allow phone_number to opentable.com only</span>. The user is picking a rule with a visible width, not a vibe.</li>
+        <li><strong>Every option states its consequence.</strong> "Block: the booking fails." "Redact: the booking still works." Without that, every prompt is a scare prompt and people click through. With it, redact is obviously attractive, which is where you want them.</li>
+        <li><strong>Ordered narrow to broad, cursor defaulted to redact</strong> whenever redaction still lets the task succeed. People pick the first thing. If "allow always" is one keystroke away the constitution collapses to permit-everything inside a week, which is exactly how the earlier standards died.</li>
+        <li><strong>Temporary grants expire visibly.</strong> "Allow for the next hour" only builds trust if the session summary later reports <span class="mono">3 temporary grants expired</span>. Otherwise people assume it quietly became permanent.</li>
+      </ul>
+      <p>Six options is the ceiling for something read mid-task. Show redact, substitute and never by default, with the rest behind an expand. Fewer choices means faster decisions, which is the fatigue number being measured.</p>
+    </section>
+
+    <section id="constitution">
+      <h2>The constitution, and why it is two artifacts</h2>
+      <p>Conflating these will bite you, so split them at the file format level from the start.</p>
+
+      <div class="two-up">
+        <div class="stack">
+          <h3>Your personal constitution is itself sensitive</h3>
+          <p>A rule reading "never disclose my HIV status" leaks the fact by existing. It stays local, always. No account, no upload, no hosted copy. A service that centrally stores everyone's privacy preferences is the exact thing this project argues against, and a judge will say so out loud.</p>
+        </div>
+        <div class="stack">
+          <h3>A template is the shareable thing</h3>
+          <p>Generic rules, no personal facts. EU Cautious. Healthcare worker. Journalist, source protection. Parent. Someone protecting sources has genuinely different needs from a doctor, and those profiles carry no facts about anyone, so they ship safely.</p>
+        </div>
+      </div>
+
+      <figure>
+        <figcaption>Distribution · the npm model applied to privacy policy</figcaption>
+        <div class="term">$ npx privacy-constitution init --profile journalist
+
+  installed  journalist@1.2.0        <span class="dim">34 rules</span>
+  installed  eu-baseline@2026.1      <span class="dim">18 rules, inherited</span>
+  local      ~/.constitution/         <span class="dim">personal layer, never uploaded</span></div>
+      </figure>
+
+      <p>A privacy NGO publishes a GDPR-strict baseline. An employer publishes one for staff. That is a better answer to "how does this scale" than offering to host it.</p>
+
+      <h3>Layering</h3>
+      <p>Four layers, merged with most specific winning and deny beating allow at equal specificity. Write that resolution order into the file so a fired rule can always be explained.</p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Source</th><th>Mutable by</th><th>Shareable</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>Template</b></td><td class="mono">journalist@1.2.0</td><td>Publisher, versioned</td><td>Yes</td></tr>
+            <tr><td><b>Organisation</b></td><td>Employer policy</td><td>Admin</td><td>Within the org</td></tr>
+            <tr><td><b>Personal</b></td><td>Questionnaire, inference, free text</td><td>The user</td><td>No</td></tr>
+            <tr><td><b>Session</b></td><td>Grants made mid-task</td><td>The user, expires</td><td>No</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Two things to build into the format now</h3>
+      <ul class="plain">
+        <li><strong>Provenance on every rule.</strong> Template, questionnaire, inferred from history, typed by the user, granted mid-task. This makes <span class="mono">export --as-template</span> a one-liner: drop everything tagged personal, keep the rest. The tool minimising its own output is a good beat in the demo.</li>
+        <li><strong>A plain English line next to every rule.</strong> The user has to be able to audit it and a judge has to be able to read it projected.</li>
+      </ul>
+
+      <figure>
+        <figcaption>Constitution specimen · ~/.constitution/constitution.yaml</figcaption>
+        <div class="term"><span class="dim">- id: health-not-to-calendars</span>
+  <span class="lab">says</span>: "Health details never reach a calendar or notes app."
+  data: [health]
+  recipient: { class: [productivity, storage] }
+  outcome: redact
+  <span class="lab">provenance</span>: { source: questionnaire, q: 3, at: 2026-09-03T09:14Z }
+
+<span class="dim">- id: no-credentials-anywhere</span>
+  <span class="lab">says</span>: "Keys and secrets never leave this machine, including into prompts."
+  data: [credentials]
+  recipient: { class: ["*"] }
+  outcome: block
+  <span class="lab">provenance</span>: { source: template, from: eu-baseline@2026.1 }</div>
+      </figure>
+
+      <p>Skip signing for the hackathon, but say the word once in the pitch. "Templates are content-addressed and signable" tells the room you know where this goes without spending an hour on it.</p>
+    </section>
+
+    <section id="onboarding">
+      <h2>Onboarding without a thirty-question form</h2>
+      <p>A questionnaire is a form, and forms are where good intentions die. Two rules keep it alive.</p>
+      <p><strong>Ship presets, then only ask where the presets disagree.</strong> Cautious, Balanced, Open. Most rules are identical across all three. Surfacing only the contested ones cuts you to six or seven questions instead of thirty.</p>
+      <p><strong>Ask about situations, not fields.</strong> "Your agent found a service you have never used and wants to send it your email address" is answerable. "Do you permit category CONTACT" is not.</p>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th style="width:2.5rem">#</th><th>Question</th><th>What it sets</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>A tool asks for something the task does not need. Send it anyway?</td><td>Minimisation default</td></tr>
+            <tr><td class="mono">2</td><td>Your agent found a service you have never used. Allow, ask, or block?</td><td>Unknown recipient</td></tr>
+            <tr><td class="mono">3</td><td>Should health details ever land in your calendar or notes?</td><td>Health handling</td></tr>
+            <tr><td class="mono">4</td><td>Your agent summarises an email thread with an external tool. Strip other people's names and numbers?</td><td>Third-party subjects</td></tr>
+            <tr><td class="mono">5</td><td>Should your location stay shared after the delivery arrives?</td><td>Time-bounded consent</td></tr>
+            <tr><td class="mono">6</td><td>Can secrets and keys go into a prompt?</td><td>Credentials, and the model provider as a recipient</td></tr>
+            <tr><td class="mono">7</td><td>How often are you willing to be interrupted?</td><td>Interruption budget</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Question 7 is not a privacy question, and it earns its place anyway. It sets a budget the user chose, which the dashboard then measures against instead of inventing a target.</p>
+
+      <h3>Graded options, not checkboxes</h3>
+      <p>Checkboxes force binary allow or deny, which throws away the recipient axis. A five-point select per data type keeps it, and maps straight onto the outcomes.</p>
+      <div class="term">  health      Never  ·<span class="sel">  Ask every time  </span>·  Used before  ·  When needed  ·  Always
+  location    Never  ·  Ask every time ·<span class="sel">  Used before  </span>·  When needed  ·  Always
+  phone       Never  ·  Ask every time ·  Used before  ·<span class="sel">  When needed  </span>·  Always
+  email       Never  ·  Ask every time ·  Used before  ·<span class="sel">  When needed  </span>·  Always
+  credentials<span class="sel">  Never  </span>·  Ask every time ·  Used before  ·  When needed  ·  Always</div>
+      <p>Do not run ten sequential prompts for ten data types. The preset fills everything, then one review screen shows all types with their current setting and the user changes only what they care about. Three screens total: pick a preset, review the table, adjust. That review table is also the best screenshot in the onboarding flow.</p>
+
+      <h3>Free text is where the model earns its place</h3>
+      <p>The user types "never tell anyone I am pregnant" or "my work email can go anywhere, my personal one cannot," and the model compiles it into structured rules. Two things have to be right.</p>
+      <ul class="plain">
+        <li><strong>Show the compiled rule before saving it.</strong> Silent misinterpretation of a privacy rule is worse than having no rule at all.</li>
+        <li><strong>Test it on the spot.</strong> Run it against two or three sample flows and show what would happen. "With this rule, that calendar entry would have been redacted." Ten seconds, and it feeds the measurability story directly.</li>
+      </ul>
+      <p>Per-destination rules use the same mechanism. "For this endpoint, only name and email, nothing else" is just a rule with the recipient pinned.</p>
+    </section>
+
+    <section id="rules">
+      <h2>Rule taxonomy</h2>
+      <p>Every rule has the same shape: <strong>data type, recipient class, purpose.</strong> Getting those three axes right is what keeps the questionnaire short, because one good question sets a whole row.</p>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Axis</th><th>Values</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>Data type</b></td><td>Identity · contact · location · health · financial · credentials · other people's data · special categories (religion, politics, sexuality, union membership, all GDPR Article 9)</td></tr>
+            <tr><td><b>Recipient class</b></td><td>This machine · your model provider · a service you have a relationship with · a service for this one task · a service the agent found by itself · public</td></tr>
+            <tr><td><b>Purpose</b></td><td>Complete the task you asked for · storage and memory · improvement and training · marketing · unclear</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The class people forget is the second one. <strong>Your model provider is a recipient.</strong> Everything in context goes there, so the constitution needs an opinion on what enters the prompt, not only on what leaves in a tool call. It is cheap to demo and it reframes the whole problem.</p>
+
+      <h3>Rules that demo well</h3>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th>Rule</th><th>Outcome</th><th>Why it lands</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Credentials never leave the machine. Keys, tokens, <span class="mono">.env</span>, SSH. To anyone, including the model provider.</td><td><span class="chip o-deny">Block</span></td><td>Instant, unarguable, easy to trigger live</td></tr>
+            <tr><td>Precise location only to a service actively delivering to you, only while it is delivering.</td><td><span class="chip o-hold">Ask</span></td><td>Introduces time-bounded consent, which nobody else will have</td></tr>
+            <tr><td>Health never to a calendar, a notes app, or long-term agent memory. Healthcare recipients only.</td><td><span class="chip o-redact">Redact</span></td><td>The scenario everyone recognises</td></tr>
+            <tr><td>Salary history never to a recruiter or employer.</td><td><span class="chip o-deny">Block</span></td><td>Illegal to ask in several US states, so the rule has legal backing</td></tr>
+            <tr><td>Other people's contact details get stripped before any third-party tool.</td><td><span class="chip o-redact">Redact</span></td><td>The third-party subject problem, which the track cares about and few teams will touch</td></tr>
+            <tr><td>Special categories never to advertising or analytics.</td><td><span class="chip o-deny">Block</span></td><td>Straight out of GDPR Article 9, no ask, no override</td></tr>
+            <tr><td>Nothing to a recipient the agent chose rather than you.</td><td><span class="chip o-hold">Ask</span></td><td>General, and specific to agents. "You did not pick this destination" is a strong signal on its own</td></tr>
+            <tr><td>Mandatory contact fields get a mask, not the real value.</td><td><span class="chip o-substitute">Substitute</span></td><td>The task completes and they still do not have you</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="measure">
+      <h2>Measurement is the unfair advantage</h2>
+      <p>Most teams will ship a tool. Shipping a number is what gets written down. Two of them.</p>
+      <p><strong>Minimisation ratio.</strong> Fields available versus fields sent, per task. Kernel off against kernel on, same task, both completing.</p>
+      <p><strong>Conformance score.</strong> A battery of scripted probes designed to tempt a leak, run against any agent, scored against a given constitution. That is a benchmark, not a tool, and it applies to agents you did not build.</p>
+
+      <h3>The dashboard</h3>
+      <p>The chart to lead with is the pair below, because it answers the objection every judge is already forming: a privacy tool that interrupts you forty times a day is dead on arrival.</p>
+
+      <figure>
+        <div class="chart-wrap">
+          <svg viewBox="0 0 640 210" role="img" aria-label="Illustrative twin-line chart. Redactions per day rise from 4 to 34 over seven days while interruptions per day fall from 19 to 3.">
+            <g stroke="var(--rule)" stroke-width="1">
+              <line x1="46" y1="20" x2="600" y2="20" />
+              <line x1="46" y1="60" x2="600" y2="60" />
+              <line x1="46" y1="100" x2="600" y2="100" />
+              <line x1="46" y1="140" x2="600" y2="140" />
+            </g>
+            <line x1="46" y1="170" x2="600" y2="170" stroke="var(--rule-strong)" stroke-width="1" />
+
+            <g fill="var(--ink-3)" font-family="IBM Plex Mono, monospace" font-size="10">
+              <text x="38" y="24" text-anchor="end">40</text>
+              <text x="38" y="104" text-anchor="end">20</text>
+              <text x="38" y="174" text-anchor="end">0</text>
+              <text x="46" y="192">Mon</text>
+              <text x="323" y="192" text-anchor="middle">Thu</text>
+              <text x="600" y="192" text-anchor="end">Sun</text>
+            </g>
+
+            <polyline fill="none" stroke="var(--redact)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+              points="46,156 138,140 231,116 323,84 415,62 508,42 600,34" />
+            <circle cx="600" cy="34" r="4" fill="var(--redact)" />
+            <text x="590" y="26" text-anchor="end" fill="var(--redact)" font-family="IBM Plex Mono, monospace" font-size="11">34 redactions</text>
+
+            <polyline fill="none" stroke="var(--hold)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 5"
+              points="46,94 138,102 231,124 323,138 415,150 508,158 600,164" />
+            <circle cx="600" cy="164" r="4" fill="var(--hold)" />
+            <text x="590" y="156" text-anchor="end" fill="var(--hold)" font-family="IBM Plex Mono, monospace" font-size="11">3 interruptions</text>
+          </svg>
+          <div class="chart-key">
+            <span class="chip o-redact">Redactions per day</span>
+            <span class="chip o-hold">Interruptions per day</span>
+            <span class="chip" style="color: var(--ink-3)">Illustrative shape, not measured data</span>
+          </div>
+        </div>
+        <figcaption>It does more and bothers you less. That is the product in one graph.</figcaption>
+      </figure>
+
+      <h3>Panels</h3>
+      <ul class="plain">
+        <li><strong>Blocked and redacted, grouped by rule rather than by call.</strong> "Rule: credentials never leave. Fired 4 times." Reads as a system working, not as a log.</li>
+        <li><strong>Near misses.</strong> Flows allowed that came close to a line. Shows the kernel is watching, not just gating.</li>
+        <li><strong>Interruptions against the budget the user set.</strong> "You asked for at most 3 a day. Today was 7."</li>
+        <li><strong>Rules added this session, by provenance.</strong> Questionnaire, inferred, or granted mid-task. Hurried grants get flagged for review, because a rushed "allow always" is the main way this decays.</li>
+        <li><strong>Top recipients.</strong> Who actually gets the most of you. Usually surprising.</li>
+        <li><strong>Coverage.</strong> Share of tool calls that passed through the kernel. Being honest about your own blind spot reads as maturity.</li>
+        <li><strong>Constitution strength.</strong> The conformance score as one panel: 22 of 24 probes held.</li>
+      </ul>
+      <p>The single most valuable line in the whole summary is not a metric. It is <strong>"three of today's interruptions were the same decision, one rule covers all of them, want it?"</strong> That turns fatigue from a number you report into a problem you fix.</p>
+    </section>
+
+    <section id="demo">
+      <h2>Demo arc</h2>
+      <p>Three minutes. The times are the discipline, not a suggestion. One scenario throughout, because breadth reads as unfinished.</p>
+
+      <div class="arc">
+        <div class="act">
+          <div class="act-time">0:00 – 0:20</div>
+          <div class="act-body">
+            <h3>The shock</h3>
+            <p>A report generated from real agent history. "340 tool calls last month. 61 carried personal data. My address went to four services, my phone number to six." No setup, no live model call. Have the kernel redact its own report on screen, so minimisation is visible in the first twenty seconds.</p>
+            <p class="proves">Proves <b>the problem is real</b> before anyone asks</p>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-time">0:20 – 1:00</div>
+          <div class="act-body">
+            <h3>The rules</h3>
+            <p>The tool reads that same history and proposes rules in plain language. "You have shared your address with delivery services twelve times and nothing else. Rule: address goes to logistics only." Accept two, edit one.</p>
+            <p class="proves">Answers <b>who writes the policy</b> · nobody does, it is inferred</p>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-time">1:00 – 2:00</div>
+          <div class="act-body">
+            <h3>The proof</h3>
+            <p>Inbox triage. The agent reads your inbox to plan the week and finds a colleague's email containing a third party's phone number, a medical appointment confirmation, and a newsletter carrying a hidden instruction. It writes to your shared work calendar and emails the clinic. Same data, different destinations, treated differently. One decision escalates, you answer once, the answer becomes a rule. <strong>The booking completes.</strong></p>
+            <p class="proves">Proves <b>contextual integrity</b> · your data, someone else's data, multiple destinations and an injection vector, in one scene</p>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-time">2:00 – 2:25</div>
+          <div class="act-body">
+            <h3>Portability</h3>
+            <p>Same constitution file, dropped into an OpenAI Agents SDK agent. Different runtime, different code, same enforcement. Ten seconds of screen for the entire thesis.</p>
+            <p class="proves">Proves it is <b>a standard, not a plugin</b></p>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-time">2:25 – 2:55</div>
+          <div class="act-body">
+            <h3>The number</h3>
+            <p>24 scripted probes against both agents. Unprotected leaks on 17, with the kernel 2. On the live task, 14 fields were available and 3 were sent.</p>
+            <p class="proves">Leaves them with <b>a benchmark, not just a tool</b></p>
+          </div>
+        </div>
+        <div class="act">
+          <div class="act-time">close</div>
+          <div class="act-body">
+            <h3>The line</h3>
+            <p>P3P and Do Not Track both asked the other side to behave, and the other side did not. This checks before the data leaves your machine, so nobody's cooperation is required.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="note">Cache everything. Venue wifi plus live model calls is how hackathon demos die. Record the model responses, replay them deterministically, and run it as a live script. Nobody can tell, and nothing breaks.</p>
+
+      <h3>Two calls to make before rehearsal</h3>
+      <p>Real history or a synthetic persona. Your own is far more credible and it is the reason the opening lands, at the cost of exposing yourself on stage. The middle path is your real history with the kernel doing the redaction live, which turns the problem into the feature.</p>
+      <p>And what to cut if you run long. Portability shrinks to holding up the file and saying the sentence. What cannot be cut is the proof scene and the number.</p>
+    </section>
+
+    <section id="evidence">
+      <h2>Evidence for the opening</h2>
+      <p>Three categories, each mapping to something the kernel fixes. Check dates and details before any of this reaches a slide.</p>
+
+      <div class="ev">
+        <div class="ev-group">
+          <h3>The agent was steered by someone else</h3>
+          <ul>
+            <li><b>EchoLeak</b>, mid-2025. A zero-click flaw in Microsoft 365 Copilot where a crafted email could make Copilot exfiltrate the user's own data with no click required. Found by Aim Security, CVE-2025-32711.</li>
+            <li><b>AgentFlayer</b>, Black Hat 2025. Zenity showed a poisoned document in Google Drive causing ChatGPT Connectors to leak secrets out of the user's own account.</li>
+          </ul>
+          <p class="proves">The agent cannot police itself, because the attacker writes to the same channel as the user.</p>
+        </div>
+
+        <div class="ev-group">
+          <h3>The user overshared without knowing</h3>
+          <ul>
+            <li><b>Meta AI's Discover feed</b>, 2025. Users' conversations appeared publicly, including medical and legal questions, with many apparently unaware.</li>
+            <li><b>Shared ChatGPT conversations indexed by Google</b>, 2025. Links people shared privately became searchable. OpenAI pulled the feature.</li>
+            <li><b>Samsung</b>, 2023. Engineers pasted proprietary source into ChatGPT and Samsung banned it internally.</li>
+          </ul>
+          <p class="proves">People do not know what is leaving.</p>
+        </div>
+
+        <div class="ev-group">
+          <h3>The assistant collected data about people who never agreed</h3>
+          <ul>
+            <li><b>VRT NWS</b>, July 2019. A contractor leaked over a thousand Dutch-language Google Assistant recordings, including some captured without a wake word. A Belgian story, which will land locally.</li>
+            <li><b>Bloomberg</b>, April 2019. Amazon contractors listening to Alexa clips.</li>
+          </ul>
+          <p class="proves">The third-party subject problem. Your agent holds other people's data.</p>
+        </div>
+      </div>
+
+      <p><strong>The one to actually show live:</strong> grep your own agent transcripts for personal data that went to a model provider. Everyone in that room has that on their laptop right now, and none of them have looked.</p>
+    </section>
+
+    <section id="build">
+      <h2>Build order</h2>
+      <p>Reverse of the demo order, sorted by risk. Nothing downstream matters if the first item does not work.</p>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr><th style="width:2.5rem">#</th><th>Item</th><th>Why here</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>Interception hook with a hardcoded constitution. Claude Code <span class="mono">PreToolUse</span> is the fastest real enforcement point.</td><td>If this does not work, nothing else matters</td></tr>
+            <tr><td class="mono">2</td><td>The inbox triage scenario running through it, allow and redact only.</td><td>Proves the outcome model end to end</td></tr>
+            <tr><td class="mono">3</td><td>Minimisation ratio.</td><td>Nearly free once the hook exists, and it is a demo number</td></tr>
+            <tr><td class="mono">4</td><td>The hold menu with the live rule preview.</td><td>The product's central interaction</td></tr>
+            <tr><td class="mono">5</td><td>Onboarding: preset, review table, free-text rules.</td><td><span class="mono">@clack/prompts</span> gets you there fast</td></tr>
+            <tr><td class="mono">6</td><td>History inference and the session summary.</td><td>Act 0 and Act 1 both depend on it</td></tr>
+            <tr><td class="mono">7</td><td>The OpenAI Agents SDK adapter.</td><td>Thin, and it is the portability proof</td></tr>
+            <tr><td class="mono">8</td><td>The 24-probe conformance suite.</td><td>The closing number, and the thing nobody else has</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><span class="mono">@clack/prompts</span> for the questionnaire, Ink for a live dashboard view if you get that far, and one bordered alert idiom for holds and redactions so the whole thing reads as one product.</p>
+    </section>
+
+    <section id="open">
+      <h2>Open calls</h2>
+      <dl class="dl">
+        <div class="dl-row">
+          <dt>Repository</dt>
+          <dd>The brief currently sits in an <span class="mono">ethicgate</span> worktree. If the hackathon terms claim anything about submitted work, that is worth avoiding. <b>A fresh <span class="mono">git init</span> in the same folder takes ten seconds.</b></dd>
+        </div>
+        <div class="dl-row">
+          <dt>Demo data</dt>
+          <dd>Real agent history or a synthetic persona. <b>Real is more credible and it is why the opening works.</b></dd>
+        </div>
+        <div class="dl-row">
+          <dt>Second adapter</dt>
+          <dd>Whether the room expects OpenAI-stack usage. If it does, the OpenAI adapter moves up the build order and becomes the primary rather than the proof.</dd>
+        </div>
+        <div class="dl-row">
+          <dt>Name</dt>
+          <dd>Unclaimed. It appears in the <span class="mono">npx</span> line, which is on screen for most of the demo, so it is worth ten minutes.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="risk">
+      <h2>What a judge will ask</h2>
+      <dl class="dl">
+        <div class="dl-row">
+          <dt>"Is this not just Do Not Track?"</dt>
+          <dd>No, and the difference is structural. DNT expressed a preference and relied on the recipient. This enforces at your own boundary, before egress, so cooperation is not required.</dd>
+        </div>
+        <div class="dl-row">
+          <dt>"Will people not just click allow?"</dt>
+          <dd>Some will, which is why the menu is ordered narrow to broad, defaults to redact, and why hurried grants get surfaced for review in the summary. Interruptions per day is on the dashboard for exactly this reason.</dd>
+        </div>
+        <div class="dl-row">
+          <dt>"What about flows you do not see?"</dt>
+          <dd>Out of scope, and reported rather than hidden. Coverage is a dashboard panel. The tool boundary is a chokepoint by construction in these runtimes, which is why it is the right place to sit.</dd>
+        </div>
+        <div class="dl-row">
+          <dt>"Does it not slow every call down?"</dt>
+          <dd>Deterministic pass first on patterns, field names and known recipients, which resolves most calls in microseconds. Only the ambiguous remainder reaches a model, and those results are cached by flow signature.</dd>
+        </div>
+        <div class="dl-row">
+          <dt>"Where do you store my rules?"</dt>
+          <dd>On your machine. Nowhere else. Only templates, which carry no personal facts, are ever published.</dd>
+        </div>
+      </dl>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var editing = false;
+  var bar = null;
+  var mainBtn = null;
+  var discardBtn = null;
+  var statusEl = null;
+  var statusTimer = null;
+
+  function waitForClaude(timeoutMs) {
+    var deadline = Date.now() + timeoutMs;
+    return new Promise(function (resolve) {
+      (function poll() {
+        if (window.claude && typeof window.claude.use === "function") return resolve(window.claude);
+        if (Date.now() > deadline) return resolve(null);
+        setTimeout(poll, 120);
+      }());
+    });
+  }
+
+  function editableRegions() {
+    return Array.prototype.slice.call(document.querySelectorAll("main section"));
+  }
+
+  function status(text, sticky) {
+    if (statusTimer) { clearTimeout(statusTimer); statusTimer = null; }
+    statusEl.textContent = text || "";
+    if (text && !sticky) statusTimer = setTimeout(function () { statusEl.textContent = ""; }, 3000);
+  }
+
+  function startEditing() {
+    editableRegions().forEach(function (el) { el.setAttribute("contenteditable", "true"); });
+    document.querySelectorAll(".chart-wrap svg").forEach(function (el) {
+      el.setAttribute("contenteditable", "false");
+    });
+    document.body.classList.add("is-editing");
+    editing = true;
+    mainBtn.textContent = "Save";
+    discardBtn.hidden = false;
+  }
+
+  function stopEditing() {
+    document.querySelectorAll("[contenteditable]").forEach(function (el) {
+      el.removeAttribute("contenteditable");
+    });
+    document.body.classList.remove("is-editing");
+    editing = false;
+    mainBtn.textContent = "Edit";
+    discardBtn.hidden = true;
+  }
+
+  // Rebuild a clean document: no edit chrome, no editing state, content as it now reads.
+  function serialize() {
+    var clone = document.documentElement.cloneNode(true);
+    clone.querySelectorAll("[contenteditable]").forEach(function (el) {
+      el.removeAttribute("contenteditable");
+    });
+    clone.querySelectorAll("[data-transient]").forEach(function (el) { el.remove(); });
+    var body = clone.querySelector("body");
+    if (body) body.classList.remove("is-editing");
+    return "<!doctype html>\n" + clone.outerHTML;
+  }
+
+  function becomeReadOnly(message) {
+    stopEditing();
+    bar.innerHTML = "";
+    var note = document.createElement("span");
+    note.className = "ed-status";
+    note.textContent = message;
+    bar.appendChild(note);
+  }
+
+  function save(artifact) {
+    var restore = editing;
+    mainBtn.disabled = true;
+    status("Saving", true);
+    stopEditing();
+    artifact.publish(serialize()).then(function () {
+      mainBtn.disabled = false;
+      status("Saved");
+    }, function (err) {
+      mainBtn.disabled = false;
+      var code = err && err.code;
+      if (code === "conflict") {
+        status("Someone saved first, reloading to their version", true);
+        return;
+      }
+      if (code === "not_writer" || code === "not_granted") {
+        becomeReadOnly("View only, your edits were not saved");
+        return;
+      }
+      if (restore) startEditing();
+      status("Save failed, edits kept on screen", true);
+    });
+  }
+
+  function mount(artifact) {
+    bar = document.createElement("div");
+    bar.className = "ed";
+    bar.setAttribute("data-transient", "");
+
+    statusEl = document.createElement("span");
+    statusEl.className = "ed-status";
+
+    discardBtn = document.createElement("button");
+    discardBtn.type = "button";
+    discardBtn.textContent = "Discard";
+    discardBtn.hidden = true;
+    discardBtn.addEventListener("click", function () { location.reload(); });
+
+    mainBtn = document.createElement("button");
+    mainBtn.type = "button";
+    mainBtn.className = "primary";
+    mainBtn.textContent = "Edit";
+    mainBtn.addEventListener("click", function () {
+      if (editing) save(artifact); else startEditing();
+    });
+
+    bar.appendChild(statusEl);
+    bar.appendChild(discardBtn);
+    bar.appendChild(mainBtn);
+    document.body.appendChild(bar);
+
+    document.addEventListener("keydown", function (event) {
+      if (!editing) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        save(artifact);
+      }
+    });
+  }
+
+  waitForClaude(12000).then(function (claude) {
+    if (!claude) return;
+    return claude.use("artifact").then(function (artifact) {
+      if (artifact && typeof artifact.publish === "function") mount(artifact);
+    });
+  }).catch(function () { /* page stays readable without editing */ });
+}());
+</script>
