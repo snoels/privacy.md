@@ -8,25 +8,37 @@ Built for the **Agentic AI: Making Privacy Native to Personal Agents** track.
 
 ---
 
-## 📄 The document lives here
+## 📄 The document
 
-**https://claude.ai/code/artifact/41df5391-effe-486f-bf3c-42bc2e77ee88**
+# → **[BRIEF.md](BRIEF.md)** ←
 
-That link is the whole brief: the thesis, the five outcomes, the constitution
-format, the demo arc, the evidence, the build order, and the decisions still
-open. One page, no scrolling between files.
+One file. The thesis, the five outcomes, the constitution format, the demo arc,
+the evidence, the build order, and the decisions still open.
 
-**To comment:** select any text on the page and leave a comment. Threads stay on
-the page where the rest of the team can see them.
+### Editing it — no terminal, no install, no git
 
-**To edit:** click **Edit** (bottom right), change anything, click **Save**.
-Everyone's view updates. No git, no terminal, no install.
+1. Open **[BRIEF.md](BRIEF.md)**.
+2. Click the **pencil icon**, top right of the file.
+3. Type. It's just text.
+4. Scroll down, write one line about what you changed, click **Commit changes**.
 
-Comment when you want it discussed. Edit when it's plainly wrong.
+Your edit is live immediately. You need a GitHub account and to be added to this
+repo — ask Sander, it takes ten seconds.
 
-The page source is committed here as [`artifact/brief.html`](artifact/brief.html)
-so the document survives independently of the link. Don't edit that file by hand
-— edit the page.
+Formatting: `**bold**`, `## Heading`, `- bullet`, blank line between paragraphs.
+Nothing else is needed.
+
+### Saying something instead of changing it
+
+GitHub can't thread comments on a file directly, so there are two ways:
+
+- **Open an [issue](../../issues/new/choose)** — for anything worth discussing
+  before it changes. This is the normal one.
+- **Use "Propose changes"** instead of "Commit changes" when you edit. That opens
+  a pull request where anyone can comment on individual lines. Use it when you
+  want a specific passage argued over rather than just fixed.
+
+> Edit when it's plainly wrong. Open an issue when it's worth a discussion.
 
 ---
 
@@ -44,27 +56,26 @@ data leaves, so nobody's cooperation is required.
 
 ---
 
-## This repo is the implementation
+## How the repo fits together
 
-The document is the plan. This repo is the build.
-
-| | |
-|---|---|
-| **The document** | The artifact link above — everyone reads, comments, edits |
-| **The build** | [`src/`](src/) — the working PoC |
-| **The bridge** | [Issues](../../issues) — the only way a doc change becomes a build change |
+| | | |
+|---|---|---|
+| **[BRIEF.md](BRIEF.md)** | The document | Everyone edits this |
+| **[src/](src/)** | The build | The working PoC |
+| **[Issues](../../issues)** | The bridge | How a doc change becomes a build change |
+| **[artifact/](artifact/brief.html)** | The designed version | A pitch surface, regenerated from `BRIEF.md`. Don't hand-edit it |
 
 ### The rule that keeps this from breaking
 
 > A change to the document is not a change to the plan until there's an issue.
 
-Comment and edit the document freely. But if something you changed means the
-build has to move, open an issue:
+Edit `BRIEF.md` freely. But if what you changed means the build has to move,
+open an issue:
 **[New issue → Build something](../../issues/new?template=build-task.yml)**.
 
 Whoever is implementing works from the document as it stands and is **not
 expected to watch it for edits.** Build changes arrive as issues, never as a
-silent edit to the page.
+silent edit.
 
 ---
 
@@ -72,6 +83,6 @@ silent edit to the page.
 
 Brainstorm, converging. Implementation starting on the document as it stands.
 
-The unmade decisions are in the **Open calls** section of the document — demo
-data, whether the room expects OpenAI-stack usage, and the name. If you have an
-opinion, comment on that section.
+The unmade decisions are in **[Open calls](BRIEF.md#open-calls)** at the bottom
+of the document — demo data, whether the room expects OpenAI-stack usage, and
+the name. If you have an opinion, edit it in.
