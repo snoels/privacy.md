@@ -68,7 +68,7 @@ function explain(result, { held } = {}) {
         ].join('\n');
       }),
       '',
-      `Then run: npx privacy-constitution decide ${held.id} <number>`,
+      `Then run: npx privacy.md decide ${held.id} <number>`,
     );
   } else {
     lines.push('', 'Retry without those fields, or ask the user to change the rule.');
@@ -152,7 +152,7 @@ export function guardAll(tools, { recipients = {}, constitution, onDecision } = 
  */
 export function constitutionGuardrail({ recipients = {}, constitution } = {}) {
   return {
-    name: 'privacy-constitution',
+    name: 'privacy.md',
     async run({ toolCall }) {
       const policy = constitution ?? loadConstitution();
       let parsed = {};

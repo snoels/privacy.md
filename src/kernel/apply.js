@@ -51,7 +51,7 @@ function maskFor(type, excerpt, recipient, identity) {
     .slice(0, 10);
 
   if (/@/.test(excerpt)) {
-    const domain = identity?.relayDomain ?? 'relay.privacy-constitution.dev';
+    const domain = identity?.relayDomain ?? 'relay.privacy-md.dev';
     return `${seed}@${domain}`;
   }
   if (type === 'contact' || /^\+?[\d\s().-]+$/.test(excerpt)) {

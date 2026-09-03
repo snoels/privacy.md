@@ -70,7 +70,7 @@ function install({ scope = 'project', dir = process.cwd() } = {}) {
   settings.hooks.PreToolUse ??= [];
 
   const already = settings.hooks.PreToolUse.some((entry) =>
-    (entry.hooks ?? []).some((hook) => hook.command?.includes('privacy-constitution')),
+    (entry.hooks ?? []).some((hook) => hook.command?.includes('adapters/claude-code.js')),
   );
 
   if (!already) {
@@ -145,8 +145,8 @@ async function runOnboarding({ force = false } = {}) {
   for (const line of rehearse(constitution)) console.log(`    ${line}`);
 
   console.log();
-  console.log(dim('  Next: npx privacy-constitution install    (registers the hook in this project)'));
-  console.log(dim('        npx privacy-constitution try        (one call, before and after)'));
+  console.log(dim('  Next: npx privacy.md install    (registers the hook in this project)'));
+  console.log(dim('        npx privacy.md try        (one call, before and after)'));
   console.log();
 }
 
@@ -360,7 +360,7 @@ function holds() {
     for (const [index, option] of menuFor(hold).entries()) {
       console.log(`     ${index + 1}. ${option.label}  ${dim(option.consequence)}`);
     }
-    console.log(dim(`     npx privacy-constitution decide ${hold.id} <number>`));
+    console.log(dim(`     npx privacy.md decide ${hold.id} <number>`));
   }
 }
 
@@ -600,7 +600,7 @@ switch (command) {
   }
   default:
     console.log(`
-  ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
+  ${bold('privacy.md')} -- pre-tool-call enforcement of your privacy rules
 
     demo      the whole thing, seven acts           ${dim('--auto unattended, --fast for rehearsal')}
     init      set up your constitution              ${dim('--force to start over')}

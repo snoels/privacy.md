@@ -95,6 +95,7 @@ export const QUESTIONS = [
   },
   {
     id: 'health-elsewhere',
+    owns: ['health'],
     ask: 'Should health details ever land in your calendar, your notes, or your agent’s memory?',
     answers: [
       { key: 'healthcare-only', label: 'No — healthcare providers only', hint: 'stripped everywhere else' },
@@ -124,6 +125,7 @@ export const QUESTIONS = [
   },
   {
     id: 'third-party-subjects',
+    owns: ['third_party_contact'],
     ask: 'Your agent summarises an email thread using an outside tool. It contains other people’s names and numbers.',
     answers: [
       { key: 'strip', label: 'Strip them', hint: 'they never agreed to any of this' },
@@ -146,6 +148,7 @@ export const QUESTIONS = [
   },
   {
     id: 'location-after-delivery',
+    owns: ['location'],
     ask: 'A courier has your address for a delivery. Should it stay shared after the parcel arrives?',
     answers: [
       { key: 'expire', label: 'No — only while they are delivering', hint: 'consent with a clock on it' },
@@ -168,6 +171,7 @@ export const QUESTIONS = [
   },
   {
     id: 'secrets-in-prompts',
+    owns: ['credentials'],
     ask: 'Can keys and secrets go into a prompt? Everything in context reaches your model provider.',
     answers: [
       { key: 'never', label: 'Never', hint: 'the model provider is a recipient like any other' },
@@ -259,9 +263,19 @@ export function scaleForPreset(preset) {
   return table[preset] ?? table.balanced;
 }
 
-/** Turn the review table back into rules. */
+/**
+ * Data types a question already speaks for.
+ *
+ * Two rules about health that say different things is not thoroughness, it is
+ * a policy the reader cannot follow. Where a question is *about* a data type,
+ * its answer is the policy for that type and the generic row stays quiet.
+ */
+export const OWNED_TYPES = new Set(QUESTIONS.flatMap((question) => question.owns ?? []));
+
+/** Turn the review table back into rules, minus the types a question owns. */
 export function rulesFromScale(rows) {
   return rows
+    .filter((row) => !OWNED_TYPES.has(row.key))
     .map((row) => {
       const setting = SCALE[row.value];
       if (setting.key === 'always') return null;
@@ -321,5 +335,57 @@ export function buildPreset(preset, { identity = {} } = {}) {
 export function mergeRules(...lists) {
   const byId = new Map();
   for (const list of lists) for (const rule of list) byId.set(rule.id, rule);
-  return [...byId.values()];
+  return dedupe([...byId.values()]);
+}
+
+/** Two rules are the same rule if they match the same flows the same way. */
+const shape = (rule) =>
+  JSON.stringify([
+    [...(rule.data ?? [])].sort(),
+    Object.entries(rule.recipient ?? {})
+      .map(([axis, values]) => [axis, [...values].sort()])
+      .sort(),
+    rule.outcome,
+  ]);
+
+/**
+ * Drop rules that say nothing the set does not already say.
+ *
+ * Building a constitution from a preset, six answers and a fixed set produces
+ * genuine duplicates — the credentials rule arrives from two directions, and
+ * the adtech rule from three. The engine copes, because specificity resolves
+ * it. A person reading the file does not: nineteen bullets with three saying
+ * the same thing reads as generated, and a policy that reads as generated is
+ * one nobody bothers to disagree with.
+ *
+ * Only exact duplicates go. Anything that differs in who it applies to stays,
+ * because that difference is usually the whole point.
+ */
+export function dedupe(rules) {
+  const seen = new Map();
+
+  for (const rule of rules) {
+    const key = shape(rule);
+    const existing = seen.get(key);
+    // Keep whichever explains itself better; the sentence is what gets read.
+    if (!existing || (rule.says?.length ?? 0) > (existing.says?.length ?? 0)) {
+      seen.set(key, rule);
+    }
+  }
+
+  const kept = [...seen.values()];
+
+  // A rule aimed at one sector is dead weight when a broader rule already
+  // covers every recipient with the same outcome.
+  return kept.filter((rule) => {
+    const sectors = rule.recipient?.sector;
+    if (!sectors) return true;
+    return !kept.some(
+      (other) =>
+        other !== rule &&
+        other.outcome === rule.outcome &&
+        other.recipient?.trust?.includes('*') &&
+        (rule.data ?? []).every((type) => (other.data ?? []).includes(type)),
+    );
+  });
 }

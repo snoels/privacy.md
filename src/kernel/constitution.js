@@ -83,7 +83,7 @@ export function warnings(constitution) {
       id: 'no-identity',
       says: 'No identity set, so your own contact details read as someone else\'s.',
       because: 'They get stripped rather than masked, and calls that need them will fail.',
-      fix: 'npx privacy-constitution init --force, or add identity.email to the file.',
+      fix: 'npx privacy.md init --force, or add identity.email to the file.',
     });
   }
 
@@ -92,7 +92,7 @@ export function warnings(constitution) {
       id: 'no-rules',
       says: 'This constitution has no rules, so nothing is being checked.',
       because: 'Every call will pass through untouched.',
-      fix: 'npx privacy-constitution init',
+      fix: 'npx privacy.md init',
     });
   }
 

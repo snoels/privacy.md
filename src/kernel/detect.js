@@ -28,7 +28,29 @@ function getAt(payload, path) {
  * each other, which is a different thing and stays checked.
  */
 const ADDRESSING_FIELDS =
-  /^(to|url|uri|endpoint|host|hostname|domain|channel|recipient|destination|dest|target|webhook)$/i;
+  /^(to|host|hostname|domain|channel|recipient|destination|dest|target)$/i;
+
+/**
+ * Fields holding a URL, where only part of the value is addressing.
+ *
+ * The host says where the call goes. The path and query string are payload
+ * heading there, and `?email=jane@acme.test` is a disclosure however it is
+ * spelled. Exempting the whole field would wave through one of the most common
+ * ways personal data actually leaves a machine.
+ */
+const URL_FIELDS = /^(url|uri|endpoint|webhook|link|href|src)$/i;
+
+/** Everything in a URL except the host, which is where it is going. */
+function payloadOfUrl(text) {
+  try {
+    const parsed = new URL(text);
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    // Not parseable as a URL, so treat the whole thing as payload: we cannot
+    // prove any of it is routing.
+    return text;
+  }
+}
 
 /** Field names that name a data type outright, whatever the value looks like. */
 const FIELD_NAMES = {
@@ -142,10 +164,10 @@ export function detect(payload, context = {}) {
     const fieldName = String(path[path.length - 1] ?? '');
 
     // Where the call is going is not a contact detail being disclosed to it.
-    // Only contact detection is exempted: a secret in a URL query string is
-    // still a secret leaving the machine, and skipping the whole field would
-    // wave it through.
+    // Only contact detection is exempted, and for a URL only the host is
+    // addressing -- the query string is payload like any other.
     const isAddressing = ADDRESSING_FIELDS.test(fieldName);
+    const scanned = URL_FIELDS.test(fieldName) ? payloadOfUrl(text) : text;
 
     const skip = (type) => isAddressing && (type === 'contact' || type === 'location');
 
@@ -153,7 +175,7 @@ export function detect(payload, context = {}) {
       if (re.test(fieldName) && !skip(type)) add(path, type, `field:${fieldName}`, text);
     }
 
-    for (const hit of patternsIn(text)) {
+    for (const hit of patternsIn(scanned)) {
       if (skip(hit.type)) continue;
       add(path, hit.type, `pattern:${hit.label}`, hit.excerpt);
     }
@@ -161,7 +183,7 @@ export function detect(payload, context = {}) {
     // Encoding is not concealment we should reward. A key base64'd on the way
     // out is still a key leaving the machine.
     if (context.deep !== false) {
-      for (const { text: decoded, via } of decodings(text)) {
+      for (const { text: decoded, via } of decodings(scanned)) {
         for (const hit of patternsIn(decoded)) {
           if (skip(hit.type)) continue;
           // The excerpt stays the *encoded* value, because that is the string

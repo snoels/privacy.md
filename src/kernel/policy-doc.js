@@ -19,86 +19,93 @@ const OUTCOME_WORDS = {
   block: 'is blocked',
 };
 
-const SOURCE_HEADINGS = {
-  questionnaire: 'What you told it during setup',
-  preset: 'From the preset you chose',
-  inferred: 'Inferred from what your agent already does',
-  personal: 'In your own words',
-  'granted-mid-task': 'Decided while you were working',
-  template: 'From a shared template',
+/** What each data type is called when it heads a section. */
+const TOPICS = [
+  ['credentials', 'Keys and secrets'],
+  ['health', 'Health'],
+  ['special_category', 'Beliefs, politics and orientation'],
+  ['identity', 'Identity documents'],
+  ['financial', 'Money'],
+  ['salary_history', 'What I earn'],
+  ['location', 'Where I am'],
+  ['third_party_contact', "Other people's details"],
+  ['contact', 'My contact details'],
+];
+
+const PROVENANCE_NOTE = {
+  personal: 'in my own words',
+  'granted-mid-task': 'decided while working',
+  inferred: 'inferred from what my agent already does',
+  'granted-mid-task-expired': 'expired',
 };
 
-const ORDER = ['personal', 'granted-mid-task', 'questionnaire', 'inferred', 'preset', 'template'];
-
-/**
- * Render a constitution as a readable policy document.
- *
- * @param {object} constitution
- * @param {{preset?: string}} [options]
- */
 export function toMarkdown(constitution, { preset } = {}) {
   const rules = constitution.rules ?? [];
-  const grouped = new Map();
-
-  for (const rule of rules) {
-    const source = rule.provenance?.source ?? 'preset';
-    grouped.set(source, [...(grouped.get(source) ?? []), rule]);
-  }
 
   const out = [
     '# My privacy policy',
     '',
-    'This is what my AI agents are allowed to share about me, and with whom.',
-    'It is checked before anything leaves this machine — not reported afterwards.',
+    'What my AI agents may share about me, and with whom. Checked before',
+    'anything leaves this machine — not reported afterwards.',
     '',
-    '> This file stays on your computer. It is never uploaded, because a rule',
-    '> about your health leaks the fact by existing.',
+    '> This file stays on this computer. It is never uploaded, because a rule',
+    '> about my health would leak the fact by existing.',
     '',
   ];
 
   if (constitution.identity?.email || constitution.identity?.phone) {
-    out.push('## Who I am', '');
-    out.push('So the kernel can tell my own details apart from other people’s:', '');
-    if (constitution.identity.email) out.push(`- ${constitution.identity.email}`);
-    if (constitution.identity.phone) out.push(`- ${constitution.identity.phone}`);
+    const mine = [constitution.identity.email, constitution.identity.phone].filter(Boolean);
+    out.push(`**Me:** ${mine.join(' · ')}`);
+    out.push('');
+    out.push('_So it can tell my own details apart from other people’s._');
     out.push('');
   }
 
   if (constitution.budget?.interruptionsPerDay !== undefined) {
-    out.push('## How often it may interrupt me', '');
-    out.push(`At most **${constitution.budget.interruptionsPerDay} times a day**. Beyond that it should be`);
-    out.push('learning from the decisions I already made rather than asking again.', '');
+    out.push(
+      `**Interrupt me at most ${constitution.budget.interruptionsPerDay} times a day.** Past that it should be learning`,
+    );
+    out.push('from decisions I already made rather than asking again.');
+    out.push('');
   }
 
-  out.push('## The rules', '');
+  // Grouped by what the rule is about, because that is how someone checks it:
+  // they think "what happens to my health data", not "what did the preset say".
+  const used = new Set();
 
-  const sources = [...grouped.keys()].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+  for (const [type, heading] of TOPICS) {
+    const mine = rules.filter((rule) => rule.data?.includes(type) && rule.data.length <= 2);
+    if (mine.length === 0) continue;
 
-  for (const source of sources) {
-    out.push(`### ${SOURCE_HEADINGS[source] ?? source}`, '');
-    for (const rule of grouped.get(source)) {
-      const suffix = rule.expires ? ` _(until ${new Date(rule.expires).toLocaleTimeString()})_` : '';
-      out.push(`- ${rule.says}${suffix}`);
+    out.push(`## ${heading}`, '');
+    for (const rule of mine) {
+      used.add(rule.id);
+      out.push(`- ${sentence(rule)}`);
     }
     out.push('');
   }
 
-  out.push('## What happens when a rule fires', '');
-  out.push('| Outcome | What it means |');
-  out.push('| --- | --- |');
-  for (const [outcome, meaning] of Object.entries(OUTCOME_WORDS)) {
-    if (!rules.some((rule) => rule.outcome === outcome)) continue;
-    out.push(`| \`${outcome}\` | The data ${meaning}. |`);
+  // Rules that span many types are about a situation rather than a subject.
+  const general = rules.filter((rule) => !used.has(rule.id));
+  if (general.length > 0) {
+    out.push('## Whatever the data', '');
+    for (const rule of general) out.push(`- ${sentence(rule)}`);
+    out.push('');
   }
-  out.push('');
-  out.push('Most of these leave the task working. Blocking is the rare one — a');
-  out.push('privacy tool that mostly stops things from working gets switched off.', '');
 
   out.push('---', '');
-  out.push(
-    `_${rules.length} rules${preset ? `, starting from the **${preset}** preset` : ''}. Edit this file and run_`,
-  );
-  out.push('_`npx privacy-constitution compile` to put your changes into force._');
+  out.push(`_${rules.length} rules${preset ? `, from the **${preset}** preset` : ''}._`);
+  out.push('_Edit this file, then run `npx privacy-constitution compile` to put it into force._');
 
   return `${out.join('\n')}\n`;
+}
+
+/** One rule as a line, with a note on where it came from if that is worth knowing. */
+function sentence(rule) {
+  const notes = [];
+  const source = PROVENANCE_NOTE[rule.provenance?.source];
+  if (source) notes.push(source);
+  if (rule.expires) notes.push(`until ${new Date(rule.expires).toLocaleTimeString()}`);
+  const suffix = notes.length > 0 ? ` _(${notes.join(', ')})_` : '';
+  return `${rule.says}${suffix}`;
 }

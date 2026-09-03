@@ -1,10 +1,10 @@
 {
-  "name": "privacy-constitution",
+  "name": "privacy.md",
   "version": "0.1.0",
   "description": "Pre-tool-call enforcement of a portable privacy policy for personal AI agents.",
   "type": "module",
   "bin": {
-    "privacy-constitution": "./bin/cli.js"
+    "privacy.md": "./bin/cli.js"
   },
   "exports": {
     ".": "./kernel/index.js"

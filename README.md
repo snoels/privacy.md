@@ -30,12 +30,22 @@ at your own boundary, so nobody's cooperation is required.
 
 ## Install
 
+Not on npm yet, so run it from a clone. Node 20 or newer:
+
 ```bash
-npx privacy.md init      # write your privacy.md and compile it
-npx privacy.md install   # register the hook in your agent runtime
+git clone https://github.com/snoels/privacy.md
+cd privacy.md/src && npm install && npm link
+
+privacy.md init       # write your privacy.md and compile it
+privacy.md install    # register the hook in your agent runtime
+privacy.md demo       # the whole thing, seven acts
 ```
 
-Node 20 or newer. Nothing leaves your machine, and there is no account.
+Without `npm link`, every command below is `node bin/cli.js <command>` from
+`src/`. Once the package is published, it is `npx privacy.md <command>` with no
+clone at all.
+
+Nothing leaves your machine, and there is no account.
 
 ## Your privacy.md
 
@@ -97,7 +107,7 @@ conversation you were already having:
     2. Send a masked value  the call still works, clinic gets a relay
     7. Never                calls that need it will fail
 
-  Then run: npx privacy.md decide 7f3a91 2
+  Then run: privacy.md decide 7f3a91 2
 ```
 
 Every option shows the rule it would write, so you can see how wide a grant is
@@ -110,7 +120,7 @@ ask again.
 against any agent, including ones we did not build:
 
 ```bash
-npx privacy.md conform
+privacy.md conform
 ```
 
 ```
