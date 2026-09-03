@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 .env
 *.log
+
+# A hook installed into the checkout itself, which happens when `install` runs
+# with no --dir. It carries an absolute path, so it is useless to anyone else.
+.claude/

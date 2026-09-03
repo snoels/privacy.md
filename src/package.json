@@ -25,7 +25,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "privacy.md": "./bin/cli.js"
+    "privacy.md": "bin/cli.js"
   },
   "exports": {
     ".": "./kernel/index.js"

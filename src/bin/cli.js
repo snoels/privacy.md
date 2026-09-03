@@ -89,7 +89,7 @@ function install({ scope = 'project', dir = process.cwd() } = {}) {
           type: 'command',
           command: `node ${HOOK}`,
           timeout: 10,
-          statusMessage: 'Checking against your privacy constitution...',
+          statusMessage: 'Checking your privacy rules...',
         },
       ],
     });
@@ -176,7 +176,7 @@ function doctor({ dir = process.cwd() } = {}) {
 async function runOnboarding({ force = false } = {}) {
   const existing = existsSync(RULES_PATH);
   if (existing && !force) {
-    console.log(dim(`You already have a constitution at ${RULES_PATH}.`));
+    console.log(dim(`You already have a privacy.md at ${POLICY_PATH}.`));
     console.log(dim('Run with --force to start over, or `rules` to see what it says.'));
     return;
   }
