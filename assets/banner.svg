@@ -1,63 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="privacy.md — AGENTS.md tells an agent how to work. privacy.md tells it what it may send.">
-  <defs>
-    <style>
-      .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
-      .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-    </style>
-  </defs>
-
-  <!-- ground -->
-  <rect width="1280" height="400" fill="#0D1117"/>
+  <rect x="0" y="0" width="1280" height="400" fill="#0D1117"/>
   <rect x="0.5" y="0.5" width="1279" height="399" fill="none" stroke="#21262D" stroke-width="1"/>
 
-  <!-- ── left: the wordmark ── -->
-  <text class="mono" x="72" y="150" font-size="82" font-weight="600" fill="#E6EDF3">privacy<tspan fill="#58A6FF">.md</tspan></text>
+  <!-- wordmark -->
+  <text x="64" y="132" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="66" font-weight="700" fill="#E6EDF3" xml:space="preserve">privacy<tspan fill="#58A6FF">.md</tspan></text>
+  <rect x="66" y="156" width="104" height="3" fill="#58A6FF"/>
 
-  <rect x="74" y="182" width="132" height="3" fill="#58A6FF"/>
+  <text x="64" y="212" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" fill="#8B949E" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#8B949E">AGENTS.md</tspan> tells an agent how to work.</text>
+  <text x="64" y="248" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" fill="#E6EDF3" xml:space="preserve"><tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#E6EDF3">privacy.md</tspan> tells it what it may send.</text>
 
-  <text class="sans" x="72" y="240" font-size="23" fill="#8B949E">
-    <tspan class="mono" fill="#8B949E">AGENTS.md</tspan> tells an agent how to work.
-  </text>
-  <text class="sans" x="72" y="276" font-size="23" fill="#E6EDF3">
-    <tspan class="mono" fill="#E6EDF3">privacy.md</tspan> tells it what it may send.
-  </text>
+  <line x1="64" y1="288" x2="580" y2="288" stroke="#21262D" stroke-width="1"/>
+  <text x="64" y="322" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">checked before the call goes out, never after</text>
+  <text x="64" y="348" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">24 of 27 leak probes held &#183; 2 runtimes &#183; nothing uploaded</text>
 
-  <!-- the boundary, in one line -->
-  <text class="mono" x="72" y="336" font-size="15" fill="#6E7681">
-    checked before the call goes out, not after
-  </text>
+  <!-- right: one tool call, checked -->
+  <rect x="672" y="56" width="552" height="288" rx="6" fill="#161B22" stroke="#30363D" stroke-width="1"/>
 
-  <!-- ── right: what that means on one tool call ── -->
-  <rect x="744" y="70" width="464" height="260" rx="6" fill="#161B22" stroke="#30363D" stroke-width="1"/>
+  <circle cx="698" cy="82" r="5" fill="#30363D"/>
+  <circle cx="716" cy="82" r="5" fill="#30363D"/>
+  <circle cx="734" cy="82" r="5" fill="#30363D"/>
+  <text x="754" y="87" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#6E7681" xml:space="preserve">the agent proposes a call</text>
+  <line x1="672" y1="108" x2="1224" y2="108" stroke="#30363D" stroke-width="1"/>
 
-  <!-- card chrome -->
-  <circle cx="768" cy="94" r="5" fill="#30363D"/>
-  <circle cx="786" cy="94" r="5" fill="#30363D"/>
-  <circle cx="804" cy="94" r="5" fill="#30363D"/>
-  <text class="mono" x="822" y="99" font-size="13" fill="#6E7681">agent proposes a call</text>
-  <line x1="744" y1="116" x2="1208" y2="116" stroke="#30363D" stroke-width="1"/>
+  <text x="698" y="140" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#E6EDF3" xml:space="preserve">calendar.events.create</text>
 
-  <text class="mono" x="768" y="146" font-size="15" fill="#E6EDF3">calendar.events.create</text>
+  <text x="698" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">title</text>
+  <text x="810" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#E6EDF3" xml:space="preserve">Appointment</text>
+  <text x="1140" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#3FB950" xml:space="preserve">sent</text>
 
-  <text class="mono" x="768" y="182" font-size="15" fill="#8B949E">title</text>
-  <text class="mono" x="880" y="182" font-size="15" fill="#E6EDF3">Appointment</text>
-  <text class="mono" x="1148" y="182" font-size="15" fill="#3FB950">sent</text>
+  <text x="698" y="204" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">start</text>
+  <text x="810" y="204" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#E6EDF3" xml:space="preserve">2026-09-11 14:00</text>
+  <text x="1140" y="204" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#3FB950" xml:space="preserve">sent</text>
 
-  <text class="mono" x="768" y="208" font-size="15" fill="#8B949E">start</text>
-  <text class="mono" x="880" y="208" font-size="15" fill="#E6EDF3">2026-09-11 14:00</text>
-  <text class="mono" x="1148" y="208" font-size="15" fill="#3FB950">sent</text>
+  <text x="698" y="232" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">notes</text>
+  <text x="810" y="232" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#484F58" xml:space="preserve">Physio, ref #A2213</text>
+  <line x1="808" y1="227" x2="962" y2="227" stroke="#6E7681" stroke-width="1"/>
+  <text x="1140" y="232" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#F85149" xml:space="preserve">held</text>
 
-  <text class="mono" x="768" y="234" font-size="15" fill="#8B949E">notes</text>
-  <text class="mono" x="880" y="234" font-size="15" fill="#6E7681" text-decoration="line-through">Physio, ref #A2213</text>
-  <text class="mono" x="1124" y="234" font-size="15" fill="#F85149">held</text>
+  <text x="698" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#6E7681" xml:space="preserve">attendee</text>
+  <text x="810" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#484F58" xml:space="preserve">+32 470 88 21 04</text>
+  <line x1="808" y1="255" x2="945" y2="255" stroke="#6E7681" stroke-width="1"/>
+  <text x="1140" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#F85149" xml:space="preserve">held</text>
 
-  <text class="mono" x="768" y="260" font-size="15" fill="#8B949E">attendee</text>
-  <text class="mono" x="880" y="260" font-size="15" fill="#6E7681" text-decoration="line-through">+32 470 88 21 04</text>
-  <text class="mono" x="1124" y="260" font-size="15" fill="#F85149">held</text>
+  <line x1="698" y1="286" x2="1198" y2="286" stroke="#30363D" stroke-width="1"/>
 
-  <line x1="768" y1="282" x2="1184" y2="282" stroke="#30363D" stroke-width="1"/>
-
-  <text class="mono" x="768" y="308" font-size="14" fill="#BC8CFF">REDACT</text>
-  <text class="mono" x="836" y="308" font-size="14" fill="#8B949E">2 fields held ·</text>
-  <text class="mono" x="962" y="308" font-size="14" fill="#3FB950">the event was still created</text>
+  <text x="698" y="316" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" font-weight="700" fill="#BC8CFF" xml:space="preserve">REDACT</text>
+  <text x="772" y="316" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#8B949E" xml:space="preserve">2 fields held,</text>
+  <text x="906" y="316" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" fill="#3FB950" xml:space="preserve">the event was still created</text>
 </svg>
