@@ -18,6 +18,7 @@ make on stage.
 cd src && npm install
 npx . init                                       # the questionnaire
 npx . install --dir /path/to/a/scratch/project   # registers the PreToolUse hook
+npx . scan                                       # what your agent already did, before any of this
 npx . rules                                      # what your constitution says, in plain English
 npx . report                                     # what was withheld, and how often you were asked
 ```
@@ -65,6 +66,32 @@ interception, the outcome model end to end, and the minimization ratio.
 Item 4 was proven the same way: a held call reached the user as a seven-option
 menu inside the session, `decide` wrote the rule, and the retry was no longer
 held.
+
+## Reading history back
+
+`npx . scan` replays the tool calls already sitting in `~/.claude/projects` and
+reports what left the machine. No setup, no model call, no hypothetical — every
+person running a coding agent has months of this and none of them have looked.
+
+It is also the answer to cold start: `--apply` turns observed habits into rules,
+which beats asking someone to fill in a form about what they might do.
+
+```
+    6493  tool calls
+      80  carried something personal
+      27  services received it
+```
+
+Three shapes of proposal, in order of how confident we can be:
+
+| Shape | When | What it does |
+|---|---|---|
+| **concentrated** | one data type only ever went to one sector | proposes the rule *and* its exception, so the habit keeps working |
+| **never-shared** | something sensitive never left | locks it in while that is still true |
+| **scattered** | it reached four or more unrelated services | flags it, proposes nothing — a habit that broad is for the user to look at, not for us to guess |
+
+The report redacts itself: counts and kinds, never values. A leak report that
+quotes your secrets back at you on a projector is its own incident.
 
 ## Onboarding
 
@@ -146,6 +173,6 @@ redacting an event's `start` breaks the task while looking like the kernel worke
 
 ## Next
 
-Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-5 are done.
-Next: history inference and the session summary (item 6), which the first two
-acts of the demo both depend on.
+Build order is in [`../BRIEF.md`](../BRIEF.md#build-order). Items 1-6 are done.
+Next: the OpenAI Agents SDK adapter (item 7), which is the portability proof,
+then the 24-probe conformance suite (item 8).

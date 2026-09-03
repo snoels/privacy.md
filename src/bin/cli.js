@@ -26,6 +26,8 @@ import { menuFor, pruneExpired } from '../kernel/rules.js';
 import { clearHold, listHolds, loadHold } from '../kernel/pending.js';
 import { escalate } from '../kernel/freetext.js';
 import { onboard, rehearse } from './onboard.js';
+import { scan, summarizeScan } from '../kernel/history.js';
+import { propose, repeatedDecisions, words } from '../kernel/infer.js';
 import { panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -192,6 +194,26 @@ function report() {
       console.log(`    ${String(count).padStart(3)}  ${name}`);
     }
   }
+
+  // The line that matters more than any metric: fatigue as something to fix
+  // rather than something to report.
+  const repeats = repeatedDecisions(entries);
+  if (repeats.length > 0) {
+    console.log();
+    console.log(bold('  Worth one rule'));
+    for (const repeat of repeats.slice(0, 3)) {
+      console.log(`    ${style.amber(repeat.suggestion)}`);
+    }
+  }
+
+  const budget = loadConstitution().budget?.interruptionsPerDay;
+  if (budget !== undefined) {
+    const over = summary.interruptions > budget;
+    console.log();
+    console.log(
+      `  ${over ? style.amber(`You asked for at most ${budget} interruptions a day. This is ${summary.interruptions}.`) : dim(`Within your budget of ${budget} a day.`)}`,
+    );
+  }
   console.log();
 }
 
@@ -281,6 +303,77 @@ function holds() {
   }
 }
 
+/**
+ * What your agent already did, before any of this was installed.
+ *
+ * The report redacts itself: counts and kinds, never values. A leak report that
+ * quotes your secrets back at you on a projector is its own incident.
+ */
+async function runScan({ days = 30, apply = false } = {}) {
+  const constitution = existsSync(CONSTITUTION_PATH) ? loadConstitution() : { rules: [] };
+  const since = Date.now() - days * 24 * 60 * 60 * 1000;
+
+  process.stdout.write(dim('  reading transcripts... '));
+  const raw = await scan({ since, identity: constitution.identity });
+  process.stdout.write('\r' + ' '.repeat(40) + '\r');
+
+  const summary = summarizeScan(raw);
+
+  console.log();
+  console.log(`  ${bold(`What your agent did in the last ${days} days`)}`);
+  console.log(`  ${dim(`${raw.scanned} sessions on this machine. Nothing here leaves it.`)}`);
+  console.log();
+  console.log(`  ${String(summary.calls).padStart(6)}  tool calls`);
+  console.log(`  ${style.amber(String(summary.carrying).padStart(6))}  carried something personal`);
+  console.log(`  ${String(summary.recipients).padStart(6)}  services received it`);
+
+  if (summary.spread.length > 0) {
+    console.log();
+    console.log(`  ${bold('Where it went')}`);
+    for (const [type, count] of summary.spread.slice(0, 8)) {
+      const total = summary.byType.find(([name]) => name === type)?.[1] ?? 0;
+      console.log(
+        `    ${words(type).padEnd(30)} ${style.amber(String(count).padStart(2))} ${count === 1 ? 'service ' : 'services'}  ${dim(`${total} ${total === 1 ? 'time' : 'times'}`)}`,
+      );
+    }
+  }
+
+  if (summary.byRecipient.length > 0) {
+    console.log();
+    console.log(`  ${bold('Who received the most')}`);
+    for (const [name, count] of summary.byRecipient.slice(0, 6)) {
+      console.log(`    ${String(count).padStart(5)}  ${name}`);
+    }
+  }
+
+  const existingRuleIds = new Set((constitution.rules ?? []).map((rule) => rule.id));
+  const proposals = propose(summary, { existingRuleIds });
+
+  if (proposals.length > 0) {
+    console.log();
+    console.log(`  ${bold('Rules this suggests')}`);
+    for (const proposal of proposals) {
+      console.log();
+      console.log(`    ${dim(proposal.evidence)}`);
+      if (proposal.rule) console.log(`    ${green('rule')}  ${proposal.rule.says}`);
+      if (proposal.also) console.log(`    ${green('    ')}  ${proposal.also.says}`);
+      if (proposal.question) console.log(`    ${style.amber('look')}  ${proposal.question}`);
+    }
+
+    if (apply) {
+      const added = proposals.flatMap((proposal) => [proposal.rule, proposal.also].filter(Boolean));
+      const kept = (constitution.rules ?? []).filter((rule) => !added.some((one) => one.id === rule.id));
+      saveConstitution({ ...constitution, rules: [...kept, ...added] });
+      console.log();
+      console.log(green(`  ${added.length} rules added to ${CONSTITUTION_PATH}`));
+    } else {
+      console.log();
+      console.log(dim('  Run with --apply to add these. Nothing has been changed.'));
+    }
+  }
+  console.log();
+}
+
 async function checkStdin() {
   const raw = await new Promise((resolveInput) => {
     let buffer = '';
@@ -340,6 +433,9 @@ switch (command) {
   case 'report':
     report();
     break;
+  case 'scan':
+    await runScan({ days: Number(value('days', 30)), apply: flag('apply') });
+    break;
   default:
     console.log(`
   ${bold('privacy-constitution')} -- pre-tool-call enforcement of your privacy rules
@@ -349,6 +445,7 @@ switch (command) {
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}
     holds     calls waiting on a decision, with the menu for each
     decide    answer a held call                   ${dim('<hold-id> <number>')}
+    scan      what your agent already did          ${dim('--days 30 --apply')}
     check     evaluate one call read from stdin
     report    what was withheld, and how often you were interrupted
 `);

@@ -67,7 +67,10 @@ function hostOf(url) {
 }
 
 function lookupHost(host, { treatLoopbackAsEgress = false } = {}) {
-  if (!host) return null;
+  // A URL we cannot parse is still a URL. We do not know who it reaches, and
+  // "unknown destination" is precisely the case worth being careful about, so
+  // it is treated as somewhere the agent picked rather than waved through.
+  if (!host) return { host: null, name: 'an address we could not read', sector: 'unknown', trust: 'agent_chosen' };
   if (LOOPBACK.test(host) && !treatLoopbackAsEgress) {
     return { host, name: 'this machine', sector: 'local', trust: 'self' };
   }
@@ -116,7 +119,7 @@ export function classifyRecipient(call, context = {}) {
 
   if (tool === 'WebFetch' || tool === 'WebSearch') {
     const resolved = lookupHost(hostOf(String(input.url ?? '')), options);
-    return { ...(resolved ?? { host: null, name: 'the open web', sector: 'unknown', trust: 'public' }), chosenBy: 'agent' };
+    return { ...resolved, chosenBy: 'agent' };
   }
 
   // Connector-shaped tools: mcp__<server>__<tool>
