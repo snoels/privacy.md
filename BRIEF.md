@@ -22,7 +22,71 @@ Every previous attempt at this (P3P, Do Not Track) asked the *recipient* to
 behave, and the recipient didn't. This enforces at your own boundary, before the
 data leaves, so nobody's cooperation is required.
 
+## How it works, end to end
+
+Two phases: a one-time setup, then a check on every call the agent makes.
+
+```
+  ONCE, AT INSTALL
+  npx privacy-constitution init
+        │
+        ├─ pick a preset            Cautious · Balanced · Open
+        ├─ ~7 questions             only where the presets disagree
+        ├─ review table             one row per data type, adjust what you care about
+        └─ free text (optional)     "never tell anyone I'm pregnant" → compiled to rules
+        │
+        ▼
+  ~/.constitution/constitution.yaml     local, never uploaded
+  hook installed into the agent runtime
+
+
+  THEN, ON EVERY TOOL CALL
+  agent proposes a call
+        │
+        ▼
+  ┌─────────────────────────────────────────────┐
+  │  KERNEL — runs BEFORE the call goes out     │
+  │                                             │
+  │  1. deterministic pass    most calls, µs    │
+  │     patterns, known fields, known recipients│
+  │  2. model, only if unclear   cached         │
+  └─────────────────────────────────────────────┘
+        │
+        ▼
+  allow · redact · substitute · ask · block
+        │                        │
+        │                        └─→ user picks from the graded menu
+        │                            └─→ writes a new rule back into the constitution
+        ▼
+  call goes out, minus whatever was stripped
+```
+
+### The check runs before the call, never after
+
+This is the whole thesis, so it is worth being blunt about. If the check runs
+*after* the call, the data has already left and what you have built is an
+incident report, not privacy. The kernel sits in front: the agent proposes, the
+kernel decides, and only then does anything leave the machine.
+
+That is also why we do not have to ask anyone to cooperate. See
+[Why this isn't Do Not Track again](#why-this-isnt-do-not-track-again).
+
+### Where the rules actually come from
+
+The questionnaire is guessing. The constitution really gets built at the **ask**
+moment, because that is the only time the user has full context on what they
+want. They pick from the graded menu, and their answer is written back into the
+file as a rule.
+
+Onboarding exists so the first day is not forty interruptions. Everything after
+that is learned from the decisions the user actually had to make — which is why
+the dashboard chart shows redactions going **up** while interruptions go
+**down**.
+
 ## What's in here
+
+Start with [How it works, end to end](#how-it-works-end-to-end) if you're new to
+this. Then:
 
 1. [Concept](#concept) — the thesis, the five outcomes, the interruption menu
 2. [The constitution](#the-constitution) — the policy file, onboarding, the rule taxonomy
