@@ -61,6 +61,7 @@ data leaves, so nobody's cooperation is required.
 | | | |
 |---|---|---|
 | **[BRIEF.md](BRIEF.md)** | The document | Everyone edits this |
+| **[SLIDES.md](SLIDES.md)** | The pitch | Four slides, three minutes. Everyone edits this too |
 | **[src/](src/)** | The build | The working PoC |
 | **[Issues](../../issues)** | The bridge | How a doc change becomes a build change |
 | **[artifact/](artifact/brief.html)** | The designed version | A pitch surface, regenerated from `BRIEF.md`. Don't hand-edit it |
