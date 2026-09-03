@@ -24,6 +24,9 @@ export const CONSTITUTION_HOME = process.env.PRIVACY_CONSTITUTION_HOME
 
 export const CONSTITUTION_PATH = join(CONSTITUTION_HOME, 'constitution.yaml');
 
+/** The readable half. What a person opens; the YAML is compiled from it. */
+export const POLICY_PATH = join(CONSTITUTION_HOME, 'privacy.md');
+
 export function presetPath(name) {
   return join(HERE, '..', 'constitutions', `${name}.yaml`);
 }

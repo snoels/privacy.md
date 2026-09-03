@@ -16,6 +16,7 @@ import { check } from '../kernel/index.js';
 import {
   CONSTITUTION_HOME,
   CONSTITUTION_PATH,
+  POLICY_PATH,
   loadConstitution,
   loadYaml,
   presetPath,
@@ -26,12 +27,13 @@ import { readLedger, summarize } from '../kernel/ledger.js';
 import { menuFor, pruneExpired } from '../kernel/rules.js';
 import { clearHold, listHolds, loadHold } from '../kernel/pending.js';
 import { escalate } from '../kernel/freetext.js';
+import { toMarkdown } from '../kernel/policy-doc.js';
 import { onboard, rehearse } from './onboard.js';
 import { scan, summarizeScan } from '../kernel/history.js';
 import { propose, repeatedDecisions, words } from '../kernel/infer.js';
 import { conform } from '../kernel/conformance.js';
 import { PRESETS, buildPreset } from '../kernel/questions.js';
-import { panel, select, style } from './ui.js';
+import { fieldDiff, panel, select, style } from './ui.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HOOK = resolve(HERE, '..', 'adapters', 'claude-code.js');
@@ -109,7 +111,7 @@ async function runOnboarding({ force = false } = {}) {
     return;
   }
 
-  const { constitution, freeText, budget } = await onboard({ existing });
+  const { constitution, freeText, preset, budget } = await onboard({ existing });
 
   console.log();
   if (freeText.length > 0) {
@@ -125,17 +127,73 @@ async function runOnboarding({ force = false } = {}) {
     for (const clause of missed) console.log(`    ${style.dim(clause)}`);
   }
 
+  // The readable file first, then the machine's copy compiled from it. That
+  // order is the point: a policy nobody can read is one nobody has agreed to.
+  mkdirSync(CONSTITUTION_HOME, { recursive: true });
+  writeFileSync(POLICY_PATH, toMarkdown(constitution, { preset }), 'utf8');
+  saveConstitution(constitution);
+
+  console.log();
+  console.log(green(`  Your privacy policy: ${POLICY_PATH}`));
+  console.log(dim(`  ${constitution.rules.length} rules, in plain English. Open it — it is yours to edit.`));
+  console.log(green(`  Compiled to:         ${CONSTITUTION_PATH}`));
+  console.log(dim(`  Interruption budget: ${budget} a day. The report measures against it.`));
+
   console.log();
   console.log(`  ${style.bold('What that does, on flows you will recognise')}`);
   console.log();
   for (const line of rehearse(constitution)) console.log(`    ${line}`);
 
-  saveConstitution(constitution);
-  console.log();
-  console.log(green(`  ${constitution.rules.length} rules written to ${CONSTITUTION_PATH}`));
-  console.log(dim(`  Interruption budget: ${budget} a day. The report measures against it.`));
   console.log();
   console.log(dim('  Next: npx privacy-constitution install    (registers the hook in this project)'));
+  console.log(dim('        npx privacy-constitution try        (one call, before and after)'));
+  console.log();
+}
+
+/**
+ * One call, before and after.
+ *
+ * The shortest possible answer to "so what does it actually do". Everything
+ * else in this tool is scaffolding around this moment.
+ */
+function tryOne() {
+  const constitution = loadConstitution();
+
+  const call = {
+    tool: 'create_calendar_event',
+    recipient: { name: 'Google Calendar', sector: 'productivity', trust: 'known' },
+    input: {
+      title: 'Appointment',
+      start: '2026-09-11T14:00+02:00',
+      notes: 'Physiotherapy, lower back injury. Reference #A2213.',
+      attendee: '+32 2 345 67 89',
+    },
+  };
+
+  const result = check(call, constitution);
+
+  console.log();
+  console.log(`  ${bold('Your agent wants to write this to your shared work calendar')}`);
+  console.log();
+  for (const row of fieldDiff(call.input, call.input, 64)) console.log(`      ${row}`);
+
+  console.log();
+  console.log(`  ${style.amber('!')}  ${bold('Your privacy constitution stopped part of that')}`);
+  console.log();
+  for (const reason of result.reasons) console.log(`      ${style.amber('·')} ${reason}`);
+
+  console.log();
+  console.log(`  ${bold('What Google Calendar actually receives')}`);
+  console.log();
+  for (const row of fieldDiff(call.input, result.input, 64)) console.log(`      ${row}`);
+
+  console.log();
+  console.log(
+    `  ${green(`${result.minimization.withheld} fields withheld`)}${dim(
+      ', and the event is still in your calendar at the right time.',
+    )}`,
+  );
+  console.log(dim('  That is the whole idea: the task completes carrying less of you.'));
   console.log();
 }
 
@@ -495,6 +553,12 @@ switch (command) {
   case 'rules':
     showRules();
     break;
+  case 'try':
+    tryOne();
+    break;
+  case 'policy':
+    console.log(readFileSync(POLICY_PATH, 'utf8'));
+    break;
   case 'install': {
     initConstitution({ preset: value('preset', 'balanced') });
     const { settingsPath, already } = install({
@@ -540,7 +604,9 @@ switch (command) {
 
     demo      the whole thing, seven acts           ${dim('--auto unattended, --fast for rehearsal')}
     init      set up your constitution              ${dim('--force to start over')}
+    policy    your privacy policy, the file you can read
     rules     what your constitution says, in plain English
+    try       one call, before and after
     install   register the PreToolUse hook         ${dim('--user | --dir <path>')}
     holds     calls waiting on a decision, with the menu for each
     decide    answer a held call                   ${dim('<hold-id> <number>')}

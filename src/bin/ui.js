@@ -292,7 +292,9 @@ export function fieldDiff(proposed, sent, width = 72) {
     if (sent === null) {
       lines.push(`${label} ${struck(trim(before))}`);
     } else if (after === undefined) {
-      lines.push(`${label} ${struck(trim(before))}  ${style.red('removed')}`);
+      // `struck` already spells this out when there is no colour to convey it.
+      const marker = COLOUR ? `  ${style.red('removed')}` : '';
+      lines.push(`${label} ${struck(trim(before))}${marker}`);
     } else if (after !== before) {
       // Both halves, because the removal is the thing worth seeing. One line
       // showing only the result asks the reader to guess what used to be there.

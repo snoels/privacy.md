@@ -53,6 +53,8 @@ the agent rather than at you. That last call is the only one that never happens.
 ```bash
 cd src && npm install
 npx . init                                       # the questionnaire
+npx . policy                                     # your privacy policy, in English
+npx . try                                        # one call, before and after
 npx . install --dir /path/to/a/scratch/project   # registers the PreToolUse hook
 npx . scan                                       # what your agent already did, before any of this
 npx . conform                                    # score against 24 probes  (--compare for all presets)
@@ -132,6 +134,16 @@ Three shapes of proposal, in order of how confident we can be:
 
 The report redacts itself: counts and kinds, never values. A leak report that
 quotes your secrets back at you on a projector is its own incident.
+
+## Two files, and the order matters
+
+`init` writes **`~/.constitution/privacy.md`** first — your policy in plain
+English — and compiles `constitution.yaml` from it. The YAML is precise and
+matchable, and nobody will ever audit it. The Markdown is the one a person
+reads, edits, and hands to someone else.
+
+A privacy rule you cannot read is a privacy rule you cannot disagree with, and a
+policy nobody disagrees with is one nobody has actually agreed to.
 
 ## Onboarding
 
