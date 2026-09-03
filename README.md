@@ -8,6 +8,28 @@ Built for the **Agentic AI: Making Privacy Native to Personal Agents** track.
 
 ---
 
+## 📄 The document lives here
+
+**https://claude.ai/code/artifact/41df5391-effe-486f-bf3c-42bc2e77ee88**
+
+That link is the whole brief: the thesis, the five outcomes, the constitution
+format, the demo arc, the evidence, the build order, and the decisions still
+open. One page, no scrolling between files.
+
+**To comment:** select any text on the page and leave a comment. Threads stay on
+the page where the rest of the team can see them.
+
+**To edit:** click **Edit** (bottom right), change anything, click **Save**.
+Everyone's view updates. No git, no terminal, no install.
+
+Comment when you want it discussed. Edit when it's plainly wrong.
+
+The page source is committed here as [`artifact/brief.html`](artifact/brief.html)
+so the document survives independently of the link. Don't edit that file by hand
+— edit the page.
+
+---
+
 ## The idea in four sentences
 
 When a personal agent acts for you, every tool call is a data transfer, and
@@ -22,97 +44,34 @@ data leaves, so nobody's cooperation is required.
 
 ---
 
-## Two workstreams
+## This repo is the implementation
 
-| Track | Home | Feeds |
-|---|---|---|
-| **The document** — the summary we're all writing | [`docs/`](docs/) | The slides |
-| **The implementation** — the working PoC | [`src/`](src/) | The live demo |
+The document is the plan. This repo is the build.
 
-They meet in [`docs/demo.md`](docs/demo.md): what gets built is what the demo
-needs, in the order the demo needs it.
-
-### How the document becomes slides
-
-```
-docs/*.md   →   artifact/brief.html   →   slides
-(everyone edits)   (designed summary)     (built from the summary)
-```
-
-`docs/` is the source of truth. The single-page HTML in
-[`artifact/`](artifact/brief.html) is the designed version of the same content —
-we regenerate it from `docs/` when it's time to pitch, and build the slides from
-that. **So write it in `docs/` and it lands in the deck.**
-
-Each `##` heading in [`docs/demo.md`](docs/demo.md) is roughly one slide.
-
----
-
-## How we work
-
-Two things move in parallel, and **issues are how they meet**.
-
-### If you're writing the document
-
-Edit `docs/` directly. Small fix, better wording, a fact you know is wrong — just
-make the edit, no permission needed.
-
-If it's worth discussing first, or it changes what we *build* rather than what we
-*say*, open an issue instead:
-**[New issue → Change the document](../../issues/new?template=doc-change.yml)**.
-
-### If you're implementing
-
-Work from the docs as they stand today. They are good enough to start.
-
-Doc changes land continuously and that's fine — **you are not expected to track
-them.** Anything that should change the implementation arrives as an issue
-labelled `implementation`, not as a silent edit. If you spot a doc change that
-does affect the build and no issue exists, open one:
-**[New issue → Build something](../../issues/new?template=build-task.yml)**.
+| | |
+|---|---|
+| **The document** | The artifact link above — everyone reads, comments, edits |
+| **The build** | [`src/`](src/) — the working PoC |
+| **The bridge** | [Issues](../../issues) — the only way a doc change becomes a build change |
 
 ### The rule that keeps this from breaking
 
 > A change to the document is not a change to the plan until there's an issue.
 
-Edit freely. But if the build has to move, say so out loud in an issue.
+Comment and edit the document freely. But if something you changed means the
+build has to move, open an issue:
+**[New issue → Build something](../../issues/new?template=build-task.yml)**.
 
----
-
-## How to edit the document
-
-**You do not need to code, install anything, or use a terminal.**
-
-1. Click any `.md` file in [`docs/`](docs/) below.
-2. Click the **pencil icon** (top right of the file).
-3. Type your changes. It is just text.
-4. Scroll down, write one line about what you changed, click **Commit changes**.
-
-That's it. Your edit is live immediately.
-
-If two people edit the *same file* at the same time, the second person gets a
-warning rather than losing work. To avoid it, say in the group which file you're
-in. That's why the document is five files rather than one.
-
-Formatting: `**bold**`, `## Heading`, `- bullet`, and a blank line between
-paragraphs. Nothing else is needed.
-
-### The five files
-
-| File | What's in it |
-|---|---|
-| [`docs/concept.md`](docs/concept.md) | The thesis, the five outcomes, and the interruption menu that builds the rules |
-| [`docs/constitution.md`](docs/constitution.md) | The policy file, how it layers and ships, onboarding, the rule taxonomy |
-| [`docs/demo.md`](docs/demo.md) | The three-minute demo arc and what we measure — **this one becomes the deck** |
-| [`docs/evidence.md`](docs/evidence.md) | Real incidents to open with, and what a judge will ask |
-| [`docs/build.md`](docs/build.md) | Build order, and the calls still open |
+Whoever is implementing works from the document as it stands and is **not
+expected to watch it for edits.** Build changes arrive as issues, never as a
+silent edit to the page.
 
 ---
 
 ## Status
 
-Brainstorm, converging.
+Brainstorm, converging. Implementation starting on the document as it stands.
 
-The unmade decisions are at the bottom of [`docs/build.md`](docs/build.md) —
-demo data, whether the room expects OpenAI-stack usage, and the name. If you
-have an opinion on one, edit it in rather than keeping it in your head.
+The unmade decisions are in the **Open calls** section of the document — demo
+data, whether the room expects OpenAI-stack usage, and the name. If you have an
+opinion, comment on that section.

@@ -1,50 +1,35 @@
-name: Change the document
-description: Something in the brief is wrong, missing, or should be argued differently.
+name: Document change that affects the build
+description: Something in the brief changed (or should change) in a way the implementation has to follow.
 title: "doc: "
 labels: ["document"]
 body:
   - type: markdown
     attributes:
       value: |
-        For anything about **what we're saying** — the pitch, the demo, the
-        rules, the evidence. You do not need to know how to code to file this.
+        **Most feedback does not belong here.** To suggest a change to the
+        brief, comment on the document itself, or just edit it.
 
-        Small and obvious? Just edit the file directly (pencil icon) instead.
-        Use this when it's worth discussing first.
-  - type: dropdown
-    id: file
-    attributes:
-      label: Which part
-      options:
-        - docs/concept.md — thesis, outcomes, the interruption
-        - docs/constitution.md — policy file, onboarding, rules
-        - docs/demo.md — the demo arc and measurement
-        - docs/evidence.md — incidents and judge questions
-        - docs/build.md — build order and open calls
-        - Not sure / spans several
-    validations:
-      required: true
+        Use this form only when a change means the **implementation** has to
+        move too — otherwise the build team won't see it.
   - type: textarea
     id: change
     attributes:
-      label: What should change
-      description: Quote the line if you can. Plain language is fine.
+      label: What changed in the document
+      description: Quote the section or the line.
     validations:
       required: true
   - type: textarea
-    id: why
+    id: consequence
     attributes:
-      label: Why
-      description: What's wrong with it as it stands, or what it's missing.
+      label: What the build now has to do differently
     validations:
       required: true
   - type: dropdown
-    id: touches_build
+    id: urgency
     attributes:
-      label: Does this change what we build?
+      label: Does the demo break without this?
       options:
-        - "No — it's about how we say it"
-        - "Yes — the implementation would have to change too"
-        - "Not sure"
+        - "Yes — the demo does not work unless we change it"
+        - "No — it makes the demo better"
     validations:
       required: true
